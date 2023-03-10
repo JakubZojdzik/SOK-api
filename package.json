@@ -1,23 +1,27 @@
 {
-  "name": "madralo-api",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "start": "node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/JakubZojdzik/madrALO-api.git"
-  },
-  "author": "",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/JakubZojdzik/madrALO-api/issues"
-  },
-  "homepage": "https://github.com/JakubZojdzik/madrALO-api#readme",
-  "dependencies": {
-    "express": "^4.18.2"
-  }
+    "name": "madralo-api",
+    "version": "1.0.0",
+    "description": "",
+    "main": "server.js",
+    "scripts": {
+        "start.dev": "nodemon -L --inspect=0.0.0.0",
+        "start": "node server.js",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/JakubZojdzik/madrALO-api.git"
+    },
+    "author": "",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/JakubZojdzik/madrALO-api/issues"
+    },
+    "homepage": "https://github.com/JakubZojdzik/madrALO-api#readme",
+    "dependencies": {
+        "body-parser": "^1.20.2",
+        "express": "^4.18.2",
+        "nodemon": "^2.0.21",
+        "pg": "^8.10.0"
+    }
 }
