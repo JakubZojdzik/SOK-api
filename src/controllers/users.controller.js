@@ -24,29 +24,18 @@ const register = (request, response) => {
     const name = request.body.name
     const email = request.body.email
     const password = request.body.password
-
-    // const namePattern = /[A-Za-zżźćńółęąśŻŹĆĄŚĘŁÓŃ]* [A-Za-zżźćńółęąśŻŹĆĄŚĘŁÓŃ]*/
-    // if (!name.match(namePattern)) {
-    //     return res.status(400).json({ err: 'Invalid characters found!' })
-    // }
-
-    let passHash = ''
+    console.log(request.body)
 
     bcrypt
         .genSalt(10)
         .then((salt) => {
             return bcrypt.hash(password, salt)
         })
+
         .then((hash) => {
-            passHash = hash
-            response.status(201).send(`Created hash: ${passHash}, from: ${name}, ${email}, ${password}`)
-            // pool.query('INSERT INTO users (name, email, password) VALUES ($1, $2, $3)', [name, email, passHash], (error, results) => {
-            //     if (error) {
-            //         throw error
-            //     }
-            //     response.status(201).send(`User added with ID: ${results.id}`)
-            //     .catch((err) => console.error(err.message))
-            // })
+            pool.query('INSERT INTO users (name, email, password) VALUES ($1, $2, $3)', [name, email, hash], (error, results) => {
+                response.status(201).send(`User added with ID: ${results.id}`)
+            })
         })
         .catch((err) => console.error(err.message))
 }

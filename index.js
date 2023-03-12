@@ -5,12 +5,11 @@ const port = 8080
 
 const usersRouter = require('./src/routes/users.route')
 
-app.use(bodyParser.json())
-// app.use(
-//     bodyParser.urlencoded({
-//         extended: true
-//     })
-// )
+app.use(
+    bodyParser.urlencoded({
+        extended: true
+    })
+)
 
 app.get('/', (request, response) => {
     response.json({ info: 'Node.js, Express, and Postgres API' })
