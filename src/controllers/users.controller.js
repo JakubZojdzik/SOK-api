@@ -21,10 +21,7 @@ const getUserById = (request, response) => {
 }
 
 const register = (request, response) => {
-    const name = request.body.name
-    const email = request.body.email
-    const password = request.body.password
-    console.log(request.body)
+    const { name, email, password } = request.body
 
     bcrypt
         .genSalt(10)
@@ -33,42 +30,35 @@ const register = (request, response) => {
         })
 
         .then((hash) => {
-            pool.query('INSERT INTO users (name, email, password) VALUES ($1, $2, $3)', [name, email, hash], (error, results) => {
-                response.status(201).send(`User added with ID: ${results.id}`)
+            pool.query('INSERT INTO users (name, email, password) VALUES ($1, $2, $3)', [name, email, hash], () => {
+                response.status(201).send(`User registered`)
             })
         })
         .catch((err) => console.error(err.message))
 }
 
 const login = (request, response) => {
-    const { name, email, password } = request.params
-
-    // const namePattern = /[A-Za-zżźćńółęąśŻŹĆĄŚĘŁÓŃ]* [A-Za-zżźćńółęąśŻŹĆĄŚĘŁÓŃ]*/
-    // if (!name.match(namePattern)) {
-    //     return res.status(400).json({ err: 'Invalid characters found!' })
-    // }
+    const { email, password } = request.body
 
     let baseHash = ''
     pool.query('SELECT password FROM users WHERE email = $1', [email], (error, results) => {
         if (error) {
             throw error
         }
-        if (!result || !result.rows || !result.rows.length) {
+        if (!results || !results.rows || !results.rows.length) {
             return res.status(400).json({ err: 'Email not registered!' })
         } else {
-            console.log(results.rows)
-            baseHash = results.rows[0]
-        }
-    })
-
-    bcrypt.compare(password, baseHash, function (err, res) {
-        if (err) {
-            console.log(err)
-        }
-        if (res) {
-            return response.status(201).send('Logged in!')
-        } else {
-            return response.json({ success: false, message: 'passwords do not match' })
+            baseHash = results.rows[0]['password']
+            bcrypt.compare(password, baseHash, function (err, res) {
+                if (err) {
+                    console.log(err)
+                }
+                if (res) {
+                    return response.status(201).send('Logged in!')
+                } else {
+                    return response.json({ success: false, message: 'passwords do not match' })
+                }
+            })
         }
     })
 }
