@@ -13,10 +13,10 @@ services:
             - ./:/app/
 
     postgres:
-        container_name: postgres
+        container_name: ${PG_HOST}
         image: postgres:latest
         ports:
-            - '5432:5432'
+            - '${PG_PORT}:5432'
         volumes:
             - postgres-data:/var/lib/postgresql/data
         environment:

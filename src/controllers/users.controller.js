@@ -1,71 +1,96 @@
-pool = require('../services/db.service')
-bcrypt = require('bcryptjs')
+const pool = require('../services/db.service');
+const bcrypt = require('bcryptjs');
+const dotenv = require('dotenv');
+const jwt = require('jsonwebtoken');
+
+dotenv.config();
+
+function generateAccessToken(username) {
+    return jwt.sign(username, process.env.TOKEN_SECRET, { expiresIn: '1800s' });
+}
 
 const getUsers = (request, response) => {
     pool.query('SELECT * FROM users ORDER BY id ASC', (error, results) => {
         if (error) {
-            throw error
+            throw error;
         }
-        response.status(200).json(results.rows)
-    })
-}
+        response.status(200).json(results.rows);
+    });
+};
 
 const getUserById = (request, response) => {
-    const id = request.params.id
+    const id = request.id;
+    console.log(id);
     pool.query('SELECT * FROM users WHERE id = $1', [id], (error, results) => {
         if (error) {
-            throw error
+            throw error;
         }
-        response.status(200).json(results.rows)
-    })
-}
+        response.status(200).json(results.rows);
+    });
+};
 
 const register = (request, response) => {
-    const { name, email, password } = request.body
+    const { name, email, password } = request.body;
 
     bcrypt
         .genSalt(10)
         .then((salt) => {
-            return bcrypt.hash(password, salt)
+            return bcrypt.hash(password, salt);
         })
 
         .then((hash) => {
             pool.query('INSERT INTO users (name, email, password) VALUES ($1, $2, $3)', [name, email, hash], () => {
-                response.status(201).send(`User registered`)
-            })
+                response.status(201).send(`User registered`);
+            });
         })
-        .catch((err) => console.error(err.message))
-}
+        .catch((err) => console.error(err.message));
+};
 
 const login = (request, response) => {
-    const { email, password } = request.body
+    const { email, password } = request.body;
 
-    let baseHash = ''
-    pool.query('SELECT password FROM users WHERE email = $1', [email], (error, results) => {
+    let baseHash = '';
+    pool.query('SELECT * FROM users WHERE email = $1', [email], (error, dbRes) => {
         if (error) {
-            throw error
+            throw error;
         }
-        if (!results || !results.rows || !results.rows.length) {
-            return res.status(400).json({ err: 'Email not registered!' })
+        if (!dbRes || !dbRes.rows || !dbRes.rows.length) {
+            return response.status(400).json({ err: 'Email not registered!' });
         } else {
-            baseHash = results.rows[0]['password']
-            bcrypt.compare(password, baseHash, function (err, res) {
+            baseHash = dbRes.rows[0]['password'];
+            bcrypt.compare(password, baseHash, function (err, cmpRes) {
                 if (err) {
-                    console.log(err)
+                    console.log(err);
                 }
-                if (res) {
-                    return response.status(201).send('Logged in!')
+                if (cmpRes) {
+                    const token = generateAccessToken({ id: dbRes.rows[0]['id'] });
+                    return response.json(token);
                 } else {
-                    return response.json({ success: false, message: 'passwords do not match' })
+                    return response.json({ success: false, message: 'passwords do not match' });
                 }
-            })
+            });
         }
-    })
-}
+    });
+};
+
+const myid = (request, response) => {
+    const { id } = request.body;
+
+    pool.query('SELECT * FROM users WHERE id = $1', [id], (error, dbRes) => {
+        if (error) {
+            throw error;
+        }
+        if (!dbRes || !dbRes.rows || !dbRes.rows.length) {
+            return response.status(400).json({ err: 'User does not exist' });
+        }
+        return response.json(dbRes);
+    });
+};
 
 module.exports = {
     getUsers,
     getUserById,
     login,
-    register
-}
+    register,
+    myid
+};
