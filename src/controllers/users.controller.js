@@ -48,14 +48,14 @@ const register = (request, response) => {
 
 const login = (request, response) => {
     const { email, password } = request.body;
-
+    console.log("Dostalem: ", email, password);
     let baseHash = '';
     pool.query('SELECT * FROM users WHERE email = $1', [email], (error, dbRes) => {
         if (error) {
             throw error;
         }
         if (!dbRes || !dbRes.rows || !dbRes.rows.length) {
-            return response.status(400).json({ err: 'Email not registered!' });
+            return response.status(401).send('Nieprawidłowe dane!');
         } else {
             baseHash = dbRes.rows[0]['password'];
             bcrypt.compare(password, baseHash, function (err, cmpRes) {
@@ -64,9 +64,9 @@ const login = (request, response) => {
                 }
                 if (cmpRes) {
                     const token = generateAccessToken({ id: dbRes.rows[0]['id'] });
-                    return response.json(token);
+                    return response.status(200).send(token);
                 } else {
-                    return response.json({ success: false, message: 'passwords do not match' });
+                    return response.status(401).send('Nieprawidłowe dane!');
                 }
             });
         }
@@ -81,9 +81,9 @@ const myid = (request, response) => {
             throw error;
         }
         if (!dbRes || !dbRes.rows || !dbRes.rows.length) {
-            return response.status(400).json({ err: 'User does not exist' });
+            return response.status(400).send('User does not exist');
         }
-        return response.json(dbRes);
+        return response.status(200).send(dbRes);
     });
 };
 
