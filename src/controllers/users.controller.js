@@ -62,8 +62,6 @@ const login = (request, response) => {
 };
 
 const isLogged = (request, response) => {
-    console.log('pytanie o sejse');
-    console.log('mam tylko', request.body);
     const { id } = request.body;
     if (id) {
         return response.status(200).send(true);
@@ -74,7 +72,7 @@ const isLogged = (request, response) => {
 }
 
 const myid = (request, response) => {
-    const { id } = request.body;
+    const id = request.body.id;
 
     pool.query('SELECT * FROM users WHERE id = $1', [id], (error, dbRes) => {
         if (error) {
@@ -83,7 +81,7 @@ const myid = (request, response) => {
         if (!dbRes || !dbRes.rows || !dbRes.rows.length) {
             return response.status(400).send('User does not exist');
         }
-        return response.status(200).send(dbRes);
+        return response.status(200).send(dbRes.rows[0]);
     });
 };
 

@@ -6,14 +6,13 @@ dotenv.config();
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
-    console.log('middleware:', token);
     if (token == null) return res.sendStatus(401);
 
     jwt.verify(token, process.env.TOKEN_SECRET, (err, tokenRes) => {
         if (err || !tokenRes['id']) {
             return res.status(403).send('Could not verify token');
         } else {
-            req.id = tokenRes['id'];
+            req.body.id = tokenRes['id'];
             next();
         }
     });
