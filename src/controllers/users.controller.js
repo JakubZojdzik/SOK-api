@@ -18,17 +18,6 @@ const getUsers = (request, response) => {
     });
 };
 
-const getUserById = (request, response) => {
-    const id = request.id;
-    console.log(id);
-    pool.query('SELECT * FROM users WHERE id = $1', [id], (error, results) => {
-        if (error) {
-            throw error;
-        }
-        response.status(200).json(results.rows);
-    });
-};
-
 const register = (request, response) => {
     const { name, email, password } = request.body;
 
@@ -72,6 +61,18 @@ const login = (request, response) => {
     });
 };
 
+const isLogged = (request, response) => {
+    console.log('pytanie o sejse');
+    console.log('mam tylko', request.body);
+    const { id } = request.body;
+    if (id) {
+        return response.status(200).send(true);
+    }
+    else {
+        return response.status(403).send('Could not verify token');
+    }
+}
+
 const myid = (request, response) => {
     const { id } = request.body;
 
@@ -88,8 +89,8 @@ const myid = (request, response) => {
 
 module.exports = {
     getUsers,
-    getUserById,
     login,
     register,
-    myid
+    myid,
+    isLogged
 };
