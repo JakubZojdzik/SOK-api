@@ -48,7 +48,6 @@ const register = (request, response) => {
 
 const login = (request, response) => {
     const { email, password } = request.body;
-    console.log("Dostalem: ", email, password);
     let baseHash = '';
     pool.query('SELECT * FROM users WHERE email = $1', [email], (error, dbRes) => {
         if (error) {
@@ -64,7 +63,7 @@ const login = (request, response) => {
                 }
                 if (cmpRes) {
                     const token = generateAccessToken({ id: dbRes.rows[0]['id'] });
-                    return response.status(200).send(token);
+                    return response.status(200).json({token: token, email: dbRes.rows[0]['email'], name: dbRes.rows[0]['name']});
                 } else {
                     return response.status(401).send('Nieprawidłowe dane!');
                 }
