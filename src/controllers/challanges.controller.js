@@ -15,21 +15,27 @@ async function isSolved(usrId, challId) {
 }
 
 async function isAdmin(usrId) {
-    const id = request.body.id;
-    pool.query('SELECT admin FROM users WHERE id=$1', [usrId], (error, dbRes) => {
+    dbRes = await pool.query('SELECT admin FROM users WHERE id=$1', [usrId]);
+    if (!dbRes || !dbRes.rows || !dbRes.rows.length) {
+        return false;
+    } else {
+        return dbRes.rows[0]['admin'];
+    }
+}
+
+//! Only for testing, remove in production
+const getChallanges = (request, response) => {
+    pool.query('SELECT * FROM challanges ORDER BY start ASC', (error, results) => {
         if (error) {
             throw error;
         }
-        if (!dbRes || !dbRes.rows || !dbRes.rows.length) {
-            return false;
-        } else {
-            return Boolean(dbRes.rows[0]['text']);
-        }
+        response.status(200).json(results.rows);
     });
-}
+};
 
-const getChallanges = (request, response) => {
-    pool.query('SELECT * FROM challanges ORDER BY id ASC', (error, results) => {
+const getCurrentChallanges = (request, response) => {
+    // select * from mytable where mydate > now()
+    pool.query('SELECT * FROM challanges WHERE start < now() ORDER BY start ASC', (error, results) => {
         if (error) {
             throw error;
         }
@@ -42,9 +48,9 @@ const getAllChallanges = (request, response) => {
 
     isAdmin(id).then((admin) => {
         if (!admin) {
-            return response.status(403);
+            return response.status(403).send('Not permited');
         }
-        pool.query('SELECT * FROM challanges ORDER BY id ASC', (error, results) => {
+        pool.query('SELECT * FROM challanges ORDER BY start ASC', (error, results) => {
             if (error) {
                 throw error;
             }
@@ -54,8 +60,8 @@ const getAllChallanges = (request, response) => {
 };
 
 const getChallangeById = (request, response) => {
-    const id = request.body.id;
-    pool.query('SELECT * FROM challanges WHERE id = $1', [id], (error, dbRes) => {
+    const id = request.params['id'];
+    pool.query('SELECT * FROM challanges WHERE id = $1 AND start < now()', [id], (error, dbRes) => {
         if (error) {
             throw error;
         }
@@ -108,5 +114,6 @@ module.exports = {
     getChallanges,
     sendAnswer,
     getChallangeById,
-    getAllChallanges
+    getAllChallanges,
+    getCurrentChallanges
 };
