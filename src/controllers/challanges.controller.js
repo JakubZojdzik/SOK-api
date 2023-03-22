@@ -6,14 +6,23 @@ const jwt = require('jsonwebtoken');
 dotenv.config();
 
 async function isSolved(usrId, challId) {
-    pool.query('SELECT ($1 = ANY ((SELECT solves FROM users WHERE id=$2)::int[]))::text', [challId, usrId], (error, dbRes) => {
+    dbRes = await pool.query('SELECT ($1 = ANY ((SELECT solves FROM users WHERE id=$2)::int[]))::text', [challId, usrId]);
+    if (!dbRes || !dbRes.rows || !dbRes.rows.length) {
+        return 'false';
+    } else {
+        return dbRes.rows[0]['text'];
+    }
+}
+
+async function isAdmin(usrId) {
+    const id = request.body.id;
+    pool.query('SELECT admin FROM users WHERE id=$1', [usrId], (error, dbRes) => {
         if (error) {
             throw error;
         }
         if (!dbRes || !dbRes.rows || !dbRes.rows.length) {
             return false;
         } else {
-            console.log('odebralem', dbRes.rows[0]['text']);
             return Boolean(dbRes.rows[0]['text']);
         }
     });
@@ -25,6 +34,22 @@ const getChallanges = (request, response) => {
             throw error;
         }
         response.status(200).json(results.rows);
+    });
+};
+
+const getAllChallanges = (request, response) => {
+    const id = request.body.id;
+
+    isAdmin(id).then((admin) => {
+        if (!admin) {
+            return response.status(403);
+        }
+        pool.query('SELECT * FROM challanges ORDER BY id ASC', (error, results) => {
+            if (error) {
+                throw error;
+            }
+            response.status(200).json(results.rows);
+        });
     });
 };
 
@@ -47,8 +72,8 @@ const sendAnswer = (request, response) => {
         return response.status(403).send('Could not verify token');
     }
 
-    isSolved(id, challId).then((solved) => {
-        if (solved) {
+    isSolved(id, challId).then((v) => {
+        if (v == 'true') {
             return response.status(200).send('Challange already solved!');
         }
         pool.query('SELECT * FROM challanges WHERE id=$1', [challId], (error, dbRes) => {
@@ -59,7 +84,6 @@ const sendAnswer = (request, response) => {
                 return response.status(400).send('Challange does not exist');
             } else {
                 const chall = dbRes.rows[0];
-                console.log(chall);
 
                 if (!chall || !chall['answer'] || !chall['points'] || !chall['id']) {
                     return response.status(400).send('Challange does not exist');
@@ -83,5 +107,6 @@ const sendAnswer = (request, response) => {
 module.exports = {
     getChallanges,
     sendAnswer,
-    getChallangeById
+    getChallangeById,
+    getAllChallanges
 };
