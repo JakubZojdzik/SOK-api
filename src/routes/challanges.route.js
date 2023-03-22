@@ -6,6 +6,7 @@ const authenticateToken = require('../middlewares/auth');
 router.use('/solve', authenticateToken);
 
 router.get('/', challangesController.getChallanges);
+router.post('/solve', challangesController.sendAnswer);
 
 
 module.exports = router;

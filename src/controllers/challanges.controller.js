@@ -1,0 +1,87 @@
+const pool = require('../services/db.service');
+const bcrypt = require('bcryptjs');
+const dotenv = require('dotenv');
+const jwt = require('jsonwebtoken');
+
+dotenv.config();
+
+async function isSolved(usrId, challId) {
+    pool.query('SELECT ($1 = ANY ((SELECT solves FROM users WHERE id=$2)::int[]))::text', [challId, usrId], (error, dbRes) => {
+        if (error) {
+            throw error;
+        }
+        if (!dbRes || !dbRes.rows || !dbRes.rows.length) {
+            return false;
+        } else {
+            console.log('odebralem', dbRes.rows[0]['text']);
+            return Boolean(dbRes.rows[0]['text']);
+        }
+    });
+}
+
+const getChallanges = (request, response) => {
+    pool.query('SELECT * FROM challanges ORDER BY id ASC', (error, results) => {
+        if (error) {
+            throw error;
+        }
+        response.status(200).json(results.rows);
+    });
+};
+
+const getChallangeById = (request, response) => {
+    const id = request.body.id;
+    pool.query('SELECT * FROM challanges WHERE id = $1', [id], (error, dbRes) => {
+        if (error) {
+            throw error;
+        }
+        if (!dbRes || !dbRes.rows || !dbRes.rows.length) {
+            return response.status(400).send('Challange does not exist');
+        }
+        return response.status(200).send(dbRes.rows[0]);
+    });
+};
+
+const sendAnswer = (request, response) => {
+    const { id, challId, givenAnswer } = request.body;
+    if (!id) {
+        return response.status(403).send('Could not verify token');
+    }
+
+    isSolved(id, challId).then((solved) => {
+        if (solved) {
+            return response.status(200).send('Challange already solved!');
+        }
+        pool.query('SELECT * FROM challanges WHERE id=$1', [challId], (error, dbRes) => {
+            if (error) {
+                throw error;
+            }
+            if (!dbRes || !dbRes.rows || !dbRes.rows.length) {
+                return response.status(400).send('Challange does not exist');
+            } else {
+                const chall = dbRes.rows[0];
+                console.log(chall);
+
+                if (!chall || !chall['answer'] || !chall['points'] || !chall['id']) {
+                    return response.status(400).send('Challange does not exist');
+                }
+
+                if (chall['answer'] === givenAnswer) {
+                    pool.query('UPDATE users SET points=points+$1, solves=array_append(solves,$2) WHERE id=$3', [chall['points'], chall['id'], id], (error) => {
+                        if (error) {
+                            throw error;
+                        }
+                        return response.status(200).send('Congratulations! Challange solved!');
+                    });
+                } else {
+                    return response.status(200).send('Wrong answer!');
+                }
+            }
+        });
+    });
+};
+
+module.exports = {
+    getChallanges,
+    sendAnswer,
+    getChallangeById
+};
