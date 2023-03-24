@@ -6,10 +6,13 @@ const authenticateToken = require('../middlewares/auth');
 router.use('/solve', authenticateToken);
 router.use('/allChallanges', authenticateToken);
 
-router.get('/', challangesController.getChallanges);
-router.get('/:id', challangesController.getChallangeById);
 router.get('/allChallanges', challangesController.getAllChallanges);
 router.get('/currentChallanges', challangesController.getCurrentChallanges);
+router.get('/:id', challangesController.getChallangeById);
+
 router.post('/solve', challangesController.sendAnswer);
+
+//! Remove in prod
+router.get('/', challangesController.getChallanges);
 
 module.exports = router;

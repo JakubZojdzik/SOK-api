@@ -34,7 +34,6 @@ const getChallanges = (request, response) => {
 };
 
 const getCurrentChallanges = (request, response) => {
-    // select * from mytable where mydate > now()
     pool.query('SELECT * FROM challanges WHERE start < now() ORDER BY start ASC', (error, results) => {
         if (error) {
             throw error;
@@ -82,7 +81,7 @@ const sendAnswer = (request, response) => {
         if (v == 'true') {
             return response.status(200).send('Challange already solved!');
         }
-        pool.query('SELECT * FROM challanges WHERE id=$1', [challId], (error, dbRes) => {
+        pool.query('SELECT * FROM challanges WHERE id=$1 AND start < now()', [challId], (error, dbRes) => {
             if (error) {
                 throw error;
             }
