@@ -10,7 +10,8 @@ const authenticateToken = (req, res, next) => {
 
     jwt.verify(token, process.env.TOKEN_SECRET, (err, tokenRes) => {
         if (err || !tokenRes['id']) {
-            return res.status(403).send('Could not verify token');
+            req.body.id = null;
+            next();
         } else {
             req.body.id = tokenRes['id'];
             next();

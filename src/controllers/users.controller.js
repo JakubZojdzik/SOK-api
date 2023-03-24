@@ -20,7 +20,6 @@ const getUsers = (request, response) => {
 
 const register = (request, response) => {
     const { name, email, password } = request.body;
-
     bcrypt
         .genSalt(10)
         .then((salt) => {
@@ -67,21 +66,21 @@ const isLogged = (request, response) => {
         return response.status(200).send(true);
     }
     else {
-        return response.status(403).send('Could not verify token');
+        return response.status(200).send(false);
     }
 }
 
-const myid = (request, response) => {
+// Returns array with id's of solved challanges
+const solves = (request, response) => {
     const id = request.body.id;
-
-    pool.query('SELECT * FROM users WHERE id = $1', [id], (error, dbRes) => {
+    pool.query('SELECT solves FROM users WHERE id = $1', [id], (error, dbRes) => {
         if (error) {
             throw error;
         }
         if (!dbRes || !dbRes.rows || !dbRes.rows.length) {
             return response.status(400).send('User does not exist');
         }
-        return response.status(200).send(dbRes.rows[0]);
+        return response.status(200).send(dbRes.rows[0]['solves']);
     });
 };
 
@@ -89,6 +88,6 @@ module.exports = {
     getUsers,
     login,
     register,
-    myid,
+    solves,
     isLogged
 };
