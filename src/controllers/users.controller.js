@@ -73,6 +73,9 @@ const isLogged = (request, response) => {
 // Returns array with id's of solved challanges
 const solves = (request, response) => {
     const id = request.body.id;
+    if (!id) {
+        return response.status(403).send('Not permited!');
+    }
     pool.query('SELECT solves FROM users WHERE id = $1', [id], (error, dbRes) => {
         if (error) {
             throw error;

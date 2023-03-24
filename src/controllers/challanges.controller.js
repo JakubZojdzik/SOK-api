@@ -44,6 +44,9 @@ const getCurrentChallanges = (request, response) => {
 
 const getAllChallanges = (request, response) => {
     const id = request.body.id;
+    if (!id) {
+        return response.status(403).send('Not permited!');
+    }
 
     isAdmin(id).then((admin) => {
         if (!admin) {
@@ -74,7 +77,7 @@ const getChallangeById = (request, response) => {
 const sendAnswer = (request, response) => {
     const { id, challId, givenAnswer } = request.body;
     if (!id) {
-        return response.status(403).send('Could not verify token');
+        return response.status(403).send('Not permited!');
     }
 
     isSolved(id, challId).then((v) => {
