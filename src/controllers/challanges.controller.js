@@ -75,14 +75,14 @@ const getChallangeById = (request, response) => {
 };
 
 const sendAnswer = (request, response) => {
-    const { id, challId, givenAnswer } = request.body;
+    const { id, challId, answer } = request.body;
     if (!id) {
         return response.status(403).send('Not permited!');
     }
 
     isSolved(id, challId).then((v) => {
         if (v == 'true') {
-            return response.status(200).send('Challange already solved!');
+            return response.status(200).send(false);
         }
         pool.query('SELECT * FROM challanges WHERE id=$1 AND start < now()', [challId], (error, dbRes) => {
             if (error) {
@@ -97,15 +97,20 @@ const sendAnswer = (request, response) => {
                     return response.status(400).send('Challange does not exist');
                 }
 
-                if (chall['answer'] === givenAnswer) {
+                if (chall['answer'] === answer) {
                     pool.query('UPDATE users SET points=points+$1, solves=array_append(solves,$2) WHERE id=$3', [chall['points'], chall['id'], id], (error) => {
                         if (error) {
                             throw error;
                         }
-                        return response.status(200).send('Congratulations! Challange solved!');
+                        pool.query('UPDATE challanges SET solves=solves+1', (error) => {
+                            if (error) {
+                                throw error;
+                            }
+                            return response.status(200).send(true);
+                        });
                     });
                 } else {
-                    return response.status(200).send('Wrong answer!');
+                    return response.status(200).send(false);
                 }
             }
         });
