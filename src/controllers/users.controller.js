@@ -63,7 +63,7 @@ const login = (request, response) => {
 const isLogged = (request, response) => {
     const { id } = request.body;
     if (id) {
-        return response.status(200).send(true);
+        return response.status(200).send(id.toString());
     }
     else {
         return response.status(200).send(false);
@@ -88,9 +88,12 @@ const solves = (request, response) => {
 };
 
 const ranking = (request, response) => {
-    pool.query('SELECT name, email, points FROM users ORDER BY points DESC', (error, dbRes) => {
+    pool.query('SELECT id, name, email, points FROM users ORDER BY points DESC', (error, dbRes) => {
         if (error) {
             throw error;
+        }
+        for (let i = 0; i < dbRes.rows.length; i++) {
+            dbRes.rows[i].position = i+1;
         }
         return response.status(200).send(dbRes.rows);
     });
