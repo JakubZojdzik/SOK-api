@@ -87,10 +87,20 @@ const solves = (request, response) => {
     });
 };
 
+const ranking = (request, response) => {
+    pool.query('SELECT name, email, points FROM users ORDER BY points DESC', (error, dbRes) => {
+        if (error) {
+            throw error;
+        }
+        return response.status(200).send(dbRes.rows);
+    });
+}
+
 module.exports = {
     getUsers,
     login,
     register,
     solves,
-    isLogged
+    isLogged,
+    ranking
 };
