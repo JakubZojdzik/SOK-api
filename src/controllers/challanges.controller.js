@@ -34,7 +34,7 @@ const getChallanges = (request, response) => {
 };
 
 const getCurrentChallanges = (request, response) => {
-    pool.query('SELECT * FROM challanges WHERE start < now() ORDER BY start ASC', (error, results) => {
+    pool.query('SELECT * FROM challanges WHERE start < now() AT TIME ZONE \'CEST\' ORDER BY start ASC', (error, results) => {
         if (error) {
             throw error;
         }
@@ -63,7 +63,7 @@ const getAllChallanges = (request, response) => {
 
 const getChallangeById = (request, response) => {
     const id = request.params['id'];
-    pool.query('SELECT * FROM challanges WHERE id = $1 AND start < now()', [id], (error, dbRes) => {
+    pool.query('SELECT * FROM challanges WHERE id = $1 AND start < now() AT TIME ZONE \'CEST\'', [id], (error, dbRes) => {
         if (error) {
             throw error;
         }
@@ -84,7 +84,7 @@ const sendAnswer = (request, response) => {
         if (v == 'true') {
             return response.status(200).send(false);
         }
-        pool.query('SELECT * FROM challanges WHERE id=$1 AND start < now()', [challId], (error, dbRes) => {
+        pool.query('SELECT * FROM challanges WHERE id=$1 AND start < now() AT TIME ZONE \'CEST\'', [challId], (error, dbRes) => {
             if (error) {
                 throw error;
             }
@@ -117,10 +117,29 @@ const sendAnswer = (request, response) => {
     });
 };
 
+const addChallange = (request, response) => {
+    const { id, title, content, author, points, answer, start } = request.body;
+
+    console.log(id, title, content, author, points, answer, start);
+
+    isAdmin(id).then((admin) => {
+        if (!admin) {
+            return response.status(403).send('You have to be admin');
+        }
+        pool.query('INSERT INTO challanges (title, content, author, points, answer, start) VALUES ($1, $2, $3, $4, $5, $6)', [title, content, author, points, answer, start], (error) => {
+            if (error) {
+                throw error;
+            }
+            response.status(201).send('Challange added');
+        });
+    })
+}
+
 module.exports = {
     getChallanges,
     sendAnswer,
     getChallangeById,
     getAllChallanges,
-    getCurrentChallanges
+    getCurrentChallanges,
+    addChallange
 };
