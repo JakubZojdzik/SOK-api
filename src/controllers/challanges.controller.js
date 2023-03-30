@@ -120,8 +120,6 @@ const sendAnswer = (request, response) => {
 const addChallange = (request, response) => {
     const { id, title, content, author, points, answer, start } = request.body;
 
-    console.log(id, title, content, author, points, answer, start);
-
     isAdmin(id).then((admin) => {
         if (!admin) {
             return response.status(403).send('You have to be admin');

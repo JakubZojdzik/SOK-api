@@ -101,11 +101,11 @@ const ranking = (request, response) => {
 
 const isAdmin = (request, response) => {
     const id = request.body.id;
-    pool.query('SELECT admin FROM users WHERE id=$1', [id]).then(() => {
+    pool.query('SELECT admin FROM users WHERE id=$1', [id]).then((dbRes) => {
         if (!dbRes || !dbRes.rows || !dbRes.rows.length) {
-            return false;
+            return response.status(200).send(false);
         } else {
-            return dbRes.rows[0]['admin'];
+            return response.status(200).send(dbRes.rows[0]['admin']);
         }
     });
 }
