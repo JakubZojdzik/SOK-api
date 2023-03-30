@@ -99,11 +99,23 @@ const ranking = (request, response) => {
     });
 }
 
+const isAdmin = (request, response) => {
+    const id = request.body.id;
+    pool.query('SELECT admin FROM users WHERE id=$1', [id]).then(() => {
+        if (!dbRes || !dbRes.rows || !dbRes.rows.length) {
+            return false;
+        } else {
+            return dbRes.rows[0]['admin'];
+        }
+    });
+}
+
 module.exports = {
     getUsers,
     login,
     register,
     solves,
     isLogged,
-    ranking
+    ranking,
+    isAdmin,
 };
