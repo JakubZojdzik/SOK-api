@@ -119,7 +119,6 @@ const sendAnswer = (request, response) => {
 
 const addChallange = (request, response) => {
     const { id, title, content, author, points, answer, start } = request.body;
-
     isAdmin(id).then((admin) => {
         if (!admin) {
             return response.status(403).send('You have to be admin');
@@ -133,11 +132,28 @@ const addChallange = (request, response) => {
     })
 }
 
+const removeChallange = (request, response) => {
+    const { id, challId } = request.body;
+    console.log(id, challId);
+    isAdmin(id).then((admin) => {
+        if (!admin) {
+            return response.status(403).send('You have to be admin');
+        }
+        pool.query('DELETE FROM challanges WHERE id=$1', [challId], (error) => {
+            if (error) {
+                throw error;
+            }
+            response.status(201).send('Challange removed');
+        });
+    })
+}
+
 module.exports = {
     getChallanges,
     sendAnswer,
     getChallangeById,
     getAllChallanges,
     getCurrentChallanges,
-    addChallange
+    addChallange,
+    removeChallange
 };
