@@ -34,7 +34,7 @@ const getChallanges = (request, response) => {
 };
 
 const getCurrentChallanges = (request, response) => {
-    pool.query('SELECT * FROM challanges WHERE start < now() AT TIME ZONE \'CEST\' ORDER BY start ASC', (error, results) => {
+    pool.query("SELECT * FROM challanges WHERE start <= now() AT TIME ZONE 'CEST' ORDER BY start ASC", (error, results) => {
         if (error) {
             throw error;
         }
@@ -42,7 +42,7 @@ const getCurrentChallanges = (request, response) => {
     });
 };
 
-const getAllChallanges = (request, response) => {
+const getInactiveChallanges = (request, response) => {
     const id = request.body.id;
     if (!id) {
         return response.status(403).send('Not permited!');
@@ -52,7 +52,7 @@ const getAllChallanges = (request, response) => {
         if (!admin) {
             return response.status(403).send('Not permited');
         }
-        pool.query('SELECT * FROM challanges ORDER BY start ASC', (error, results) => {
+        pool.query("SELECT * FROM challanges WHERE start > now() AT TIME ZONE 'CEST' ORDER BY start ASC", (error, results) => {
             if (error) {
                 throw error;
             }
@@ -63,7 +63,7 @@ const getAllChallanges = (request, response) => {
 
 const getChallangeById = (request, response) => {
     const id = request.params['id'];
-    pool.query('SELECT * FROM challanges WHERE id = $1 AND start < now() AT TIME ZONE \'CEST\'', [id], (error, dbRes) => {
+    pool.query("SELECT * FROM challanges WHERE id = $1 AND start <= now() AT TIME ZONE 'CEST'", [id], (error, dbRes) => {
         if (error) {
             throw error;
         }
@@ -84,7 +84,7 @@ const sendAnswer = (request, response) => {
         if (v == 'true') {
             return response.status(200).send(false);
         }
-        pool.query('SELECT * FROM challanges WHERE id=$1 AND start < now() AT TIME ZONE \'CEST\'', [challId], (error, dbRes) => {
+        pool.query("SELECT * FROM challanges WHERE id=$1 AND start <= now() AT TIME ZONE 'CEST'", [challId], (error, dbRes) => {
             if (error) {
                 throw error;
             }
@@ -129,8 +129,8 @@ const addChallange = (request, response) => {
             }
             response.status(201).send('Challange added');
         });
-    })
-}
+    });
+};
 
 const removeChallange = (request, response) => {
     const { id, challId } = request.body;
@@ -145,14 +145,14 @@ const removeChallange = (request, response) => {
             }
             response.status(201).send('Challange removed');
         });
-    })
-}
+    });
+};
 
 module.exports = {
     getChallanges,
     sendAnswer,
     getChallangeById,
-    getAllChallanges,
+    getInactiveChallanges,
     getCurrentChallanges,
     addChallange,
     removeChallange
