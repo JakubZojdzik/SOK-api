@@ -56,21 +56,29 @@ const getInactiveChallanges = (request, response) => {
             if (error) {
                 throw error;
             }
-            response.status(200).json(results.rows);
+            return response.status(200).json(results.rows);
         });
     });
 };
 
 const getChallangeById = (request, response) => {
-    const id = request.params['id'];
-    pool.query("SELECT * FROM challanges WHERE id = $1 AND start <= now() AT TIME ZONE 'CEST'", [id], (error, dbRes) => {
-        if (error) {
-            throw error;
+    const challId = request.params['challId'];
+    const id = request.body.id;
+    isAdmin(id).then((admin) => {
+        let tmp = " AND start <= now() AT TIME ZONE 'CEST'";
+        if (admin) {
+            tmp = '';
         }
-        if (!dbRes || !dbRes.rows || !dbRes.rows.length) {
-            return response.status(400).send('Challange does not exist');
-        }
-        return response.status(200).send(dbRes.rows[0]);
+        pool.query('SELECT * FROM challanges WHERE id = $1' + tmp, [challId], (error, dbRes) => {
+            if (error) {
+                throw error;
+            }
+            if (!dbRes || !dbRes.rows || !dbRes.rows.length) {
+                return response.status(400).send('Challange does not exist');
+            } else {
+                return response.status(200).send(dbRes.rows[0]);
+            }
+        });
     });
 };
 

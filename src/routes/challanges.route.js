@@ -7,10 +7,11 @@ router.use('/solve', authenticateToken);
 router.use('/inactiveChallanges', authenticateToken);
 router.use('/addChallange', authenticateToken);
 router.use('/removeChallange', authenticateToken);
+router.use('/byId/:challId', authenticateToken);
 
 router.get('/inactiveChallanges', challangesController.getInactiveChallanges);
 router.get('/currentChallanges', challangesController.getCurrentChallanges);
-router.get('/:id', challangesController.getChallangeById);
+router.get('/byId/:challId', challangesController.getChallangeById);
 
 router.post('/solve', challangesController.sendAnswer);
 router.post('/addChallange', challangesController.addChallange);
