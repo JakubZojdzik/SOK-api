@@ -13,11 +13,9 @@ const authenticateToken = (req, res, next) => {
     jwt.verify(token, process.env.TOKEN_SECRET, (err, tokenRes) => {
         if (err || !tokenRes['id']) {
             req.body.id = null;
-            console.log('not authed');
             next();
         } else {
             req.body.id = tokenRes['id'];
-            console.log('authed:', req.body.id);
             next();
         }
     });
