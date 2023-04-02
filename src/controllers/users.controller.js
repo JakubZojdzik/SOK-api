@@ -26,10 +26,11 @@ const getUsers = (request, response) => {
     });
 };
 
+//TODO check conflict of emails or names
 const register = (request, response) => {
     const { email, name, password, passwordRep } = request.body;
 
-    if ((!email.endsWith('@alo.pwr.edu.pl')) || (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) {
+    if (!email.endsWith('@alo.pwr.edu.pl') || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         return response.status(401).send('Nieprawidłowy adres email!');
     }
 
@@ -54,12 +55,28 @@ const register = (request, response) => {
         })
         .then((hash) => {
             pool.query('INSERT INTO users (name, email, password) VALUES ($1, $2, $3)', [name, email, hash], () => {
-                const token = generateEmailToken({ auth: 'email', id: email });
-                sendEmail('Aby zweryfikować konto proszę odwiedzić adres: http://localhost:5173/verivication/' + token);
+                const token = generateEmailToken({ email: email });
+                sendEmail('Aby zweryfikować konto proszę odwiedzić adres: http://localhost:5173/verification?token=' + token);
                 response.status(201).send('User registered');
             });
         })
         .catch((err) => console.error(err.message));
+};
+
+const verify = (request, response) => {
+    const { token } = request.body;
+    jwt.verify(token, process.env.TOKEN_SECRET, (err, tokenRes) => {
+        if (err || !tokenRes['email']) {
+            response.status(401).send('Cant verify token');
+        } else {
+            pool.query('UPDATE users SET verified = true WHERE email=$1', [tokenRes['email']], (error) => {
+                if (error) {
+                    throw error;
+                }
+                response.status(200).send('Account verified!');
+            });
+        }
+    });
 };
 
 const login = (request, response) => {
@@ -144,5 +161,6 @@ module.exports = {
     solves,
     isLogged,
     ranking,
-    isAdmin
+    isAdmin,
+    verify
 };

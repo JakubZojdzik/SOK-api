@@ -12,7 +12,9 @@ router.get('/solves', usersController.solves);
 router.get('/islogged', usersController.isLogged);
 router.get('/ranking', usersController.ranking);
 router.get('/isAdmin', usersController.isAdmin);
+
 router.post('/register', usersController.register);
+router.post('/verify', usersController.verify);
 router.post('/login', usersController.login);
 
 module.exports = router;
