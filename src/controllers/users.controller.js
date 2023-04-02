@@ -9,6 +9,10 @@ function generateAccessToken(username) {
     return jwt.sign(username, process.env.TOKEN_SECRET, { expiresIn: '21600s' });
 }
 
+function generateEmailToken(content) {
+    return jwt.sign(content, process.env.TOKEN_SECRET, { expiresIn: '900s' });
+}
+
 function sendEmail(content) {
     console.log('SENDING EMAIL!!!!!!', content);
 }
@@ -39,13 +43,10 @@ const register = (request, response) => {
     if (!/^[a-zA-Z0-9!@#$%^&*()_+=[\]{}|;:',./?`~\-]{16,32}$/.test(password)) {
         return response.status(401).send('Nieprawidłowe hasło!');
     }
-
-    console.log(password, passwordRep);
     if (password !== passwordRep) {
         return response.status(401).send('Hasła są różne!');
     }
 
-    return response.status(200).send('poszło!');
     bcrypt
         .genSalt(10)
         .then((salt) => {
@@ -53,6 +54,8 @@ const register = (request, response) => {
         })
         .then((hash) => {
             pool.query('INSERT INTO users (name, email, password) VALUES ($1, $2, $3)', [name, email, hash], () => {
+                const token = generateEmailToken({ auth: 'email', id: email });
+                sendEmail('Aby zweryfikować konto proszę odwiedzić adres: http://localhost:5173/verivication/' + token);
                 response.status(201).send('User registered');
             });
         })
