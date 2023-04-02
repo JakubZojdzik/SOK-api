@@ -6,7 +6,7 @@ const jwt = require('jsonwebtoken');
 dotenv.config();
 
 async function isSolved(usrId, challId) {
-    dbRes = await pool.query('SELECT ($1 = ANY ((SELECT solves FROM users WHERE id=$2)::int[]))::text', [challId, usrId]);
+    dbRes = await pool.query('SELECT ($1 = ANY ((SELECT solves FROM users WHERE id=$2 AND verified=true)::int[]))::text', [challId, usrId]);
     if (!dbRes || !dbRes.rows || !dbRes.rows.length) {
         return 'false';
     } else {
@@ -15,7 +15,7 @@ async function isSolved(usrId, challId) {
 }
 
 async function isAdmin(usrId) {
-    dbRes = await pool.query('SELECT admin FROM users WHERE id=$1', [usrId]);
+    dbRes = await pool.query('SELECT admin FROM users WHERE id=$1 AND verified = true', [usrId]);
     if (!dbRes || !dbRes.rows || !dbRes.rows.length) {
         return false;
     } else {
@@ -106,7 +106,7 @@ const sendAnswer = (request, response) => {
                 }
 
                 if (chall['answer'] === answer) {
-                    pool.query('UPDATE users SET points=points+$1, solves=array_append(solves,$2) WHERE id=$3', [chall['points'], chall['id'], id], (error) => {
+                    pool.query('UPDATE users SET points=points+$1, solves=array_append(solves,$2) WHERE id=$3 AND verified = true', [chall['points'], chall['id'], id], (error) => {
                         if (error) {
                             throw error;
                         }

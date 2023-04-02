@@ -9,8 +9,12 @@ function generateAccessToken(username) {
     return jwt.sign(username, process.env.TOKEN_SECRET, { expiresIn: '21600s' });
 }
 
+function sendEmail(content) {
+    console.log('SENDING EMAIL!!!!!!', content);
+}
+
 const getUsers = (request, response) => {
-    pool.query('SELECT * FROM users ORDER BY id ASC', (error, results) => {
+    pool.query('SELECT * FROM users WHERE verified = true ORDER BY id ASC', (error, results) => {
         if (error) {
             throw error;
         }
@@ -19,16 +23,37 @@ const getUsers = (request, response) => {
 };
 
 const register = (request, response) => {
-    const { name, email, password } = request.body;
+    const { email, name, password, passwordRep } = request.body;
+
+    if ((!email.endsWith('@alo.pwr.edu.pl')) || (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) {
+        return response.status(401).send('Nieprawidłowy adres email!');
+    }
+
+    if (name.length < 5 || name.length > 12) {
+        return response.status(401).send('Błędna długość nazwy!');
+    }
+    if (!/^[a-zA-Z0-9._-]+$/.test(name)) {
+        return response.status(401).send('Nazwa powinna zawierać tylko litery, liczby, kropki, myślniki i podkreślniki!');
+    }
+
+    if (!/^[a-zA-Z0-9!@#$%^&*()_+=[\]{}|;:',./?`~\-]{16,32}$/.test(password)) {
+        return response.status(401).send('Nieprawidłowe hasło!');
+    }
+
+    console.log(password, passwordRep);
+    if (password !== passwordRep) {
+        return response.status(401).send('Hasła są różne!');
+    }
+
+    return response.status(200).send('poszło!');
     bcrypt
         .genSalt(10)
         .then((salt) => {
             return bcrypt.hash(password, salt);
         })
-
         .then((hash) => {
             pool.query('INSERT INTO users (name, email, password) VALUES ($1, $2, $3)', [name, email, hash], () => {
-                response.status(201).send(`User registered`);
+                response.status(201).send('User registered');
             });
         })
         .catch((err) => console.error(err.message));
@@ -37,7 +62,7 @@ const register = (request, response) => {
 const login = (request, response) => {
     const { email, password } = request.body;
     let baseHash = '';
-    pool.query('SELECT * FROM users WHERE email = $1', [email], (error, dbRes) => {
+    pool.query('SELECT * FROM users WHERE email = $1 AND verified = true', [email], (error, dbRes) => {
         if (error) {
             throw error;
         }
@@ -51,7 +76,7 @@ const login = (request, response) => {
                 }
                 if (cmpRes) {
                     const token = generateAccessToken({ id: dbRes.rows[0]['id'] });
-                    return response.status(200).json({token: token, email: dbRes.rows[0]['email'], name: dbRes.rows[0]['name']});
+                    return response.status(200).json({ token: token, email: dbRes.rows[0]['email'], name: dbRes.rows[0]['name'] });
                 } else {
                     return response.status(401).send('Nieprawidłowe dane!');
                 }
@@ -64,11 +89,10 @@ const isLogged = (request, response) => {
     const { id } = request.body;
     if (id) {
         return response.status(200).send(id.toString());
-    }
-    else {
+    } else {
         return response.status(200).send(false);
     }
-}
+};
 
 // Returns array with id's of solved challanges
 const solves = (request, response) => {
@@ -76,7 +100,7 @@ const solves = (request, response) => {
     if (!id) {
         return response.status(403).send('Not permited!');
     }
-    pool.query('SELECT solves FROM users WHERE id = $1', [id], (error, dbRes) => {
+    pool.query('SELECT solves FROM users WHERE id = $1 AND verified = true', [id], (error, dbRes) => {
         if (error) {
             throw error;
         }
@@ -88,27 +112,27 @@ const solves = (request, response) => {
 };
 
 const ranking = (request, response) => {
-    pool.query('SELECT id, name, email, points FROM users ORDER BY points DESC', (error, dbRes) => {
+    pool.query('SELECT id, name, email, points FROM users WHERE verified = true ORDER BY points DESC', (error, dbRes) => {
         if (error) {
             throw error;
         }
         for (let i = 0; i < dbRes.rows.length; i++) {
-            dbRes.rows[i].position = i+1;
+            dbRes.rows[i].position = i + 1;
         }
         return response.status(200).send(dbRes.rows);
     });
-}
+};
 
 const isAdmin = (request, response) => {
     const id = request.body.id;
-    pool.query('SELECT admin FROM users WHERE id=$1', [id]).then((dbRes) => {
+    pool.query('SELECT admin FROM users WHERE id=$1 AND verified = true', [id]).then((dbRes) => {
         if (!dbRes || !dbRes.rows || !dbRes.rows.length) {
             return response.status(200).send(false);
         } else {
             return response.status(200).send(dbRes.rows[0]['admin']);
         }
     });
-}
+};
 
 module.exports = {
     getUsers,
@@ -117,5 +141,5 @@ module.exports = {
     solves,
     isLogged,
     ranking,
-    isAdmin,
+    isAdmin
 };
