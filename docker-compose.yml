@@ -3,14 +3,15 @@ version: '3.9'
 services:
     api:
         restart: on-failure
-        build: ./
-        image: madralo-api
+        image: node:lts-alpine
+        working_dir: /app
+        command: npm run start.dev
         depends_on:
             - postgres
         ports:
-            - '8080:8080'
+            - 8080:8080
         volumes:
-            - ./:/app/
+            - ./:/app
 
     postgres:
         container_name: ${PG_HOST}

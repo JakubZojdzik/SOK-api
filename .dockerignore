@@ -1,9 +1,6 @@
-node_modules
-npm-debug.log
+node_modules/
+dist/
 Dockerfile
 .dockerignore
-.git
-.gitignore
-README.md
-LICENSE
-.vscode
+.vscode/
+.env
