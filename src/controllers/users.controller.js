@@ -26,7 +26,6 @@ const getUsers = (request, response) => {
     });
 };
 
-//TODO check conflict of emails or names
 const register = (request, response) => {
     const { email, name, password, passwordRep } = request.body;
 
@@ -48,19 +47,29 @@ const register = (request, response) => {
         return response.status(401).send('Hasła są różne!');
     }
 
-    bcrypt
-        .genSalt(10)
-        .then((salt) => {
-            return bcrypt.hash(password, salt);
-        })
-        .then((hash) => {
-            pool.query('INSERT INTO users (name, email, password) VALUES ($1, $2, $3)', [name, email, hash], () => {
-                const token = generateEmailToken({ email: email });
-                sendEmail('Aby zweryfikować konto proszę odwiedzić adres: http://localhost:5173/verification?token=' + token);
-                response.status(201).send('User registered');
-            });
-        })
-        .catch((err) => console.error(err.message));
+    pool.query('SELECT * FROM users WHERE email = $1 OR name = $2', [email, name], (error, dbRes) => {
+        if (error) {
+            throw error;
+        }
+        console.log(dbRes.rows.length);
+        if (dbRes.rows.length) {
+            return response.status(401).send('Konto o danym mailu lub nazwie już istnieje!');
+        } else {
+            bcrypt
+            .genSalt(10)
+            .then((salt) => {
+                return bcrypt.hash(password, salt);
+            })
+            .then((hash) => {
+                pool.query('INSERT INTO users (name, email, password) VALUES ($1, $2, $3)', [name, email, hash], () => {
+                    const token = generateEmailToken({ email: email });
+                    sendEmail('Aby zweryfikować konto proszę odwiedzić adres: http://localhost:5173/verification?token=' + token);
+                    response.status(201).send('User registered');
+                });
+            })
+            .catch((err) => console.error(err.message));
+        }
+    });
 };
 
 const verify = (request, response) => {
