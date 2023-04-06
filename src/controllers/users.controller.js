@@ -123,7 +123,7 @@ const isLogged = (request, response) => {
     }
 };
 
-// Returns array with id's of solved challanges
+// Returns array with id's of solved challenges
 const solves = (request, response) => {
     const id = request.body.id;
     if (!id) {

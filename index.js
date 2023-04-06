@@ -2,7 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors')
 const usersRouter = require('./src/routes/users.route');
-const challangesRouter = require('./src/routes/challanges.route');
+const challengesRouter = require('./src/routes/challenges.route');
 
 const app = express();
 const port = 8080;
@@ -18,7 +18,7 @@ app.get('/', (request, response) => {
     response.json({ info: 'Node.js, Express, and Postgres API' });
 });
 app.use('/users', usersRouter);
-app.use('/challanges', challangesRouter);
+app.use('/challenges', challengesRouter);
 
 app.listen(port, () => {
     console.log(`App running on port ${port}.`);

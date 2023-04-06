@@ -24,8 +24,8 @@ async function isAdmin(usrId) {
 }
 
 //! Only for testing, remove in production
-const getChallanges = (request, response) => {
-    pool.query('SELECT * FROM challanges ORDER BY start ASC', (error, results) => {
+const getChallenges = (request, response) => {
+    pool.query('SELECT * FROM challenges ORDER BY start ASC', (error, results) => {
         if (error) {
             throw error;
         }
@@ -33,8 +33,8 @@ const getChallanges = (request, response) => {
     });
 };
 
-const getCurrentChallanges = (request, response) => {
-    pool.query("SELECT * FROM challanges WHERE start <= now() AT TIME ZONE 'CEST' ORDER BY start ASC", (error, results) => {
+const getCurrentChallenges = (request, response) => {
+    pool.query("SELECT * FROM challenges WHERE start <= now() AT TIME ZONE 'CEST' ORDER BY start ASC", (error, results) => {
         if (error) {
             throw error;
         }
@@ -42,7 +42,7 @@ const getCurrentChallanges = (request, response) => {
     });
 };
 
-const getInactiveChallanges = (request, response) => {
+const getInactiveChallenges = (request, response) => {
     const id = request.body.id;
     if (!id) {
         return response.status(403).send('Not permited!');
@@ -52,7 +52,7 @@ const getInactiveChallanges = (request, response) => {
         if (!admin) {
             return response.status(403).send('Not permited');
         }
-        pool.query("SELECT * FROM challanges WHERE start > now() AT TIME ZONE 'CEST' ORDER BY start ASC", (error, results) => {
+        pool.query("SELECT * FROM challenges WHERE start > now() AT TIME ZONE 'CEST' ORDER BY start ASC", (error, results) => {
             if (error) {
                 throw error;
             }
@@ -61,7 +61,7 @@ const getInactiveChallanges = (request, response) => {
     });
 };
 
-const getChallangeById = (request, response) => {
+const getChallengeById = (request, response) => {
     const challId = request.params['challId'];
     const id = request.body.id;
     isAdmin(id).then((admin) => {
@@ -69,12 +69,12 @@ const getChallangeById = (request, response) => {
         if (admin) {
             tmp = '';
         }
-        pool.query('SELECT * FROM challanges WHERE id = $1' + tmp, [challId], (error, dbRes) => {
+        pool.query('SELECT * FROM challenges WHERE id = $1' + tmp, [challId], (error, dbRes) => {
             if (error) {
                 throw error;
             }
             if (!dbRes || !dbRes.rows || !dbRes.rows.length) {
-                return response.status(400).send('Challange does not exist');
+                return response.status(400).send('Challenge does not exist');
             } else {
                 return response.status(200).send(dbRes.rows[0]);
             }
@@ -92,17 +92,17 @@ const sendAnswer = (request, response) => {
         if (v == 'true') {
             return response.status(200).send(false);
         }
-        pool.query("SELECT * FROM challanges WHERE id=$1 AND start <= now() AT TIME ZONE 'CEST'", [challId], (error, dbRes) => {
+        pool.query("SELECT * FROM challenges WHERE id=$1 AND start <= now() AT TIME ZONE 'CEST'", [challId], (error, dbRes) => {
             if (error) {
                 throw error;
             }
             if (!dbRes || !dbRes.rows || !dbRes.rows.length) {
-                return response.status(400).send('Challange does not exist');
+                return response.status(400).send('Challenge does not exist');
             } else {
                 const chall = dbRes.rows[0];
 
                 if (!chall || !chall['answer'] || !chall['points'] || !chall['id']) {
-                    return response.status(400).send('Challange does not exist');
+                    return response.status(400).send('Challenge does not exist');
                 }
 
                 if (chall['answer'] === answer) {
@@ -110,7 +110,7 @@ const sendAnswer = (request, response) => {
                         if (error) {
                             throw error;
                         }
-                        pool.query('UPDATE challanges SET solves=solves+1', (error) => {
+                        pool.query('UPDATE challenges SET solves=solves+1', (error) => {
                             if (error) {
                                 throw error;
                             }
@@ -125,43 +125,43 @@ const sendAnswer = (request, response) => {
     });
 };
 
-const addChallange = (request, response) => {
+const addChallenge = (request, response) => {
     const { id, title, content, author, points, answer, start } = request.body;
     isAdmin(id).then((admin) => {
         if (!admin) {
             return response.status(403).send('You have to be admin');
         }
-        pool.query('INSERT INTO challanges (title, content, author, points, answer, start) VALUES ($1, $2, $3, $4, $5, $6)', [title, content, author, points, answer, start], (error) => {
+        pool.query('INSERT INTO challenges (title, content, author, points, answer, start) VALUES ($1, $2, $3, $4, $5, $6)', [title, content, author, points, answer, start], (error) => {
             if (error) {
                 throw error;
             }
-            response.status(201).send('Challange added');
+            response.status(201).send('Challenge added');
         });
     });
 };
 
-const removeChallange = (request, response) => {
+const removeChallenge = (request, response) => {
     const { id, challId } = request.body;
     console.log(id, challId);
     isAdmin(id).then((admin) => {
         if (!admin) {
             return response.status(403).send('You have to be admin');
         }
-        pool.query('DELETE FROM challanges WHERE id=$1', [challId], (error) => {
+        pool.query('DELETE FROM challenges WHERE id=$1', [challId], (error) => {
             if (error) {
                 throw error;
             }
-            response.status(201).send('Challange removed');
+            response.status(201).send('Challenge removed');
         });
     });
 };
 
 module.exports = {
-    getChallanges,
+    getChallenges,
     sendAnswer,
-    getChallangeById,
-    getInactiveChallanges,
-    getCurrentChallanges,
-    addChallange,
-    removeChallange
+    getChallengeById,
+    getInactiveChallenges,
+    getCurrentChallenges,
+    addChallenge,
+    removeChallenge
 };
