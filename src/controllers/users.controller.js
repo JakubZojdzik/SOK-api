@@ -13,8 +13,25 @@ function generateEmailToken(content) {
     return jwt.sign(content, process.env.TOKEN_SECRET, { expiresIn: '900s' });
 }
 
-function sendEmail(content) {
-    console.log('SENDING EMAIL!!!!!!', content);
+function sendTokenEmail(token, dest) {
+    nodemailer.createTransport({
+        host: process.env.SMTP_HOST,
+        port: process.env.SMTP_PORT,
+        secure: false,
+        auth: {
+            user: process.env.SMPT_USER,
+            pass: process.env.SMTP_PASSWORD
+        }
+    });
+
+    let message = {
+        from: '"mądrALO Team" <from@example.com>',
+        to: dest,
+        subject: 'Weryfikacja rejestracji',
+        text: 'Dziękuję za rejestrację! Aby aktywować nowe konto należy kliknąć w poniższy link: http://localhost:5173/verification?token=' + token + '<br />',
+        html: '<h1><b>Dziękuję za rejestrację! </b></h1><br /> Aby aktywować nowe konto należy kliknąć w poniższy link:<br />http://localhost:5173/verification?token=' + token + '<br />'
+    };
+    transportMail(message);
 }
 
 const getUsers = (request, response) => {
@@ -56,18 +73,18 @@ const register = (request, response) => {
             return response.status(401).send('Konto o danym mailu lub nazwie już istnieje!');
         } else {
             bcrypt
-            .genSalt(10)
-            .then((salt) => {
-                return bcrypt.hash(password, salt);
-            })
-            .then((hash) => {
-                pool.query('INSERT INTO users (name, email, password) VALUES ($1, $2, $3)', [name, email, hash], () => {
-                    const token = generateEmailToken({ email: email });
-                    sendEmail('Aby zweryfikować konto proszę odwiedzić adres: http://localhost:5173/verification?token=' + token);
-                    response.status(201).send('User registered');
-                });
-            })
-            .catch((err) => console.error(err.message));
+                .genSalt(10)
+                .then((salt) => {
+                    return bcrypt.hash(password, salt);
+                })
+                .then((hash) => {
+                    pool.query('INSERT INTO users (name, email, password) VALUES ($1, $2, $3)', [name, email, hash], () => {
+                        const token = generateEmailToken({ email: email });
+                        sendTokenEmail(token, email);
+                        response.status(201).send('User registered');
+                    });
+                })
+                .catch((err) => console.error(err.message));
         }
     });
 };
