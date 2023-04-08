@@ -28,8 +28,8 @@ function sendTokenEmail(token, dest) {
         from: '"mądrALO Team" <from@example.com>',
         to: dest,
         subject: 'Weryfikacja rejestracji',
-        text: 'Dziękuję za rejestrację! Aby aktywować nowe konto należy kliknąć w poniższy link: http://localhost:5173/verification?token=' + token + '<br />',
-        html: '<h1><b>Dziękuję za rejestrację! </b></h1><br /> Aby aktywować nowe konto należy kliknąć w poniższy link:<br />http://localhost:5173/verification?token=' + token + '<br />'
+        text: 'Dziękuję za rejestrację! Aby aktywować nowe konto należy kliknąć w poniższy link: ' + process.env.CLIENT_URL + '/verification?token=' + token + '<br />',
+        html: '<h1><b>Dziękuję za rejestrację! </b></h1><br /> Aby aktywować nowe konto należy kliknąć w poniższy link:<br />' + process.env.CLIENT_URL + '/verification?token=' + token + '<br />'
     };
     transportMail(message);
 }
