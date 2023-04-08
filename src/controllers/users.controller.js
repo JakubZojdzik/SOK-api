@@ -171,6 +171,9 @@ const ranking = (request, response) => {
 
 const isAdmin = (request, response) => {
     const id = request.body.id;
+    if (!id) {
+        return response.status(200).send(false);
+    }
     pool.query('SELECT admin FROM users WHERE id=$1 AND verified = true', [id]).then((dbRes) => {
         if (!dbRes || !dbRes.rows || !dbRes.rows.length) {
             return response.status(200).send(false);

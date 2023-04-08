@@ -23,6 +23,31 @@ async function isAdmin(usrId) {
     }
 }
 
+async function timeToSubmit(usrId) {
+    dbRes = await pool.query(
+        `
+        WITH diff AS (
+            SELECT
+                submitted - NOW() AT TIME ZONE 'CEST' + INTERVAL '10 minutes' AS difftime
+            from
+                users
+            WHERE
+                id=$1
+        )
+
+        SELECT
+            CASE
+                WHEN difftime <= INTERVAL '0 seconds' THEN CEIL(EXTRACT(EPOCH FROM (INTERVAL '0 minutes'))/60)
+            ELSE
+                CEIL(EXTRACT(EPOCH FROM (difftime))/60)
+            END AS minutes
+        FROM diff
+    `,
+        [usrId]
+    );
+    return dbRes.rows[0]['minutes'];
+}
+
 //! Only for testing, remove in production
 const getChallenges = (request, response) => {
     pool.query('SELECT * FROM challenges ORDER BY start ASC', (error, results) => {
@@ -87,41 +112,46 @@ const sendAnswer = (request, response) => {
     if (!id) {
         return response.status(403).send('Not permited!');
     }
-
-    isSolved(id, challId).then((v) => {
-        if (v == 'true') {
-            return response.status(200).send(false);
-        }
-        pool.query("SELECT * FROM challenges WHERE id=$1 AND start <= now() AT TIME ZONE 'CEST'", [challId], (error, dbRes) => {
-            if (error) {
-                throw error;
-            }
-            if (!dbRes || !dbRes.rows || !dbRes.rows.length) {
-                return response.status(400).send('Challenge does not exist');
-            } else {
-                const chall = dbRes.rows[0];
-
-                if (!chall || !chall['answer'] || !chall['points'] || !chall['id']) {
-                    return response.status(400).send('Challenge does not exist');
-                }
-
-                if (chall['answer'] === answer) {
-                    pool.query('UPDATE users SET points=points+$1, solves=array_append(solves,$2) WHERE id=$3 AND verified = true', [chall['points'], chall['id'], id], (error) => {
-                        if (error) {
-                            throw error;
-                        }
-                        pool.query('UPDATE challenges SET solves=solves+1', (error) => {
-                            if (error) {
-                                throw error;
-                            }
-                            return response.status(200).send(true);
-                        });
-                    });
-                } else {
+    timeToSubmit(id).then((t) => {
+        if (t != '0') {
+            response.status(400).send('Musisz odczekać jeszcze ' + t + ' min');
+        } else {
+            isSolved(id, challId).then((v) => {
+                if (v == 'true') {
                     return response.status(200).send(false);
                 }
-            }
-        });
+                pool.query("SELECT * FROM challenges WHERE id=$1 AND start <= now() AT TIME ZONE 'CEST'", [challId], (error, dbRes) => {
+                    if (error) {
+                        throw error;
+                    }
+                    if (!dbRes || !dbRes.rows || !dbRes.rows.length) {
+                        return response.status(400).send('Challenge does not exist');
+                    } else {
+                        const chall = dbRes.rows[0];
+
+                        if (!chall || !chall['answer'] || !chall['points'] || !chall['id']) {
+                            return response.status(400).send('Challenge does not exist');
+                        }
+
+                        if (chall['answer'] === answer) {
+                            pool.query('UPDATE users SET points=points+$1, solves=array_append(solves,$2) WHERE id=$3 AND verified = true', [chall['points'], chall['id'], id], (error) => {
+                                if (error) {
+                                    throw error;
+                                }
+                                pool.query('UPDATE challenges SET solves=solves+1', (error) => {
+                                    if (error) {
+                                        throw error;
+                                    }
+                                    return response.status(200).send(true);
+                                });
+                            });
+                        } else {
+                            return response.status(200).send(false);
+                        }
+                    }
+                });
+            });
+        }
     });
 };
 
