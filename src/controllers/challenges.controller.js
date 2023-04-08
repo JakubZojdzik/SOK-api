@@ -133,6 +133,8 @@ const sendAnswer = (request, response) => {
                             return response.status(400).send('Challenge does not exist');
                         }
 
+                        pool.query("UPDATE users SET submitted=now() AT TIME ZONE 'CEST' WHERE id=$1 AND verified = true", [id]);
+
                         if (chall['answer'] === answer) {
                             pool.query('UPDATE users SET points=points+$1, solves=array_append(solves,$2) WHERE id=$3 AND verified = true', [chall['points'], chall['id'], id], (error) => {
                                 if (error) {
