@@ -29,9 +29,11 @@ For pgadmin you can also provide:
 - `PGADMIN_password` with password for logging into pgadmin
 
 ## Endpoints
+
 I should create documentation but it's boring and I'm lazy, so it's nice field for your contribution xd.
 
 ## Run
+
 You can run everything with docker-compose:
 
 ```sh
@@ -39,4 +41,5 @@ docker-compose up -d
 ```
 
 ## Client
+
 You can find my client for **mądrALO** [here](https://github.com/JakubZojdzik/madrALO-client)
