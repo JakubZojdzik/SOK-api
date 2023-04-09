@@ -18,7 +18,4 @@ router.post('/addChallenge', challengesController.addChallenge);
 
 router.delete('/removeChallenge', challengesController.removeChallenge);
 
-//! Remove in prod
-router.get('/', challengesController.getChallenges);
-
 module.exports = router;

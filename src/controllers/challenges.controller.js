@@ -48,16 +48,6 @@ async function timeToSubmit(usrId) {
     return dbRes.rows[0]['minutes'];
 }
 
-//! Only for testing, remove in production
-const getChallenges = (request, response) => {
-    pool.query('SELECT * FROM challenges ORDER BY start ASC', (error, results) => {
-        if (error) {
-            throw error;
-        }
-        response.status(200).json(results.rows);
-    });
-};
-
 const getCurrentChallenges = (request, response) => {
     pool.query("SELECT * FROM challenges WHERE start <= now() AT TIME ZONE 'CEST' ORDER BY start ASC", (error, results) => {
         if (error) {
@@ -189,7 +179,6 @@ const removeChallenge = (request, response) => {
 };
 
 module.exports = {
-    getChallenges,
     sendAnswer,
     getChallengeById,
     getInactiveChallenges,

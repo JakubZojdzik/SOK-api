@@ -34,15 +34,6 @@ function sendTokenEmail(token, dest) {
     transportMail(message);
 }
 
-const getUsers = (request, response) => {
-    pool.query('SELECT * FROM users WHERE verified = true ORDER BY id ASC', (error, results) => {
-        if (error) {
-            throw error;
-        }
-        response.status(200).json(results.rows);
-    });
-};
-
 const register = (request, response) => {
     const { email, name, password, passwordRep } = request.body;
 
@@ -184,7 +175,6 @@ const isAdmin = (request, response) => {
 };
 
 module.exports = {
-    getUsers,
     login,
     register,
     solves,

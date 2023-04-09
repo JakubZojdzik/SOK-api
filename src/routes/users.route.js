@@ -7,7 +7,6 @@ router.use('/solves', authenticateToken);
 router.use('/islogged', authenticateToken);
 router.use('/isAdmin', authenticateToken);
 
-router.get('/', usersController.getUsers);
 router.get('/solves', usersController.solves);
 router.get('/islogged', usersController.isLogged);
 router.get('/ranking', usersController.ranking);
