@@ -29,15 +29,11 @@ For pgadmin you can also provide:
 - `PGADMIN_password` with password for logging into pgadmin
 
 ## Endpoints
+I should create documentation but it's boring and I'm lazy, so it's nice field for your contribution xd.
 
-## Project Setup
-
-```sh
-npm install
-```
-
-## Compile and Hot-Reload for Development
+## Run
+You can run everything with docker-compose:
 
 ```sh
-npm run start.dev
+docker-compose up -d
 ```
