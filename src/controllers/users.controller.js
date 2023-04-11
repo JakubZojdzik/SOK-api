@@ -25,7 +25,7 @@ function sendTokenEmail(token, dest) {
     });
 
     let message = {
-        from: '"mądrALO Team" <from@example.com>',
+        from: '"mądrALO Team" <' + process.env.SMTP_HOST + '>',
         to: dest,
         subject: 'Weryfikacja rejestracji',
         text: 'Dziękuję za rejestrację! Aby aktywować nowe konto należy kliknąć w poniższy link: ' + process.env.CLIENT_URL + '/verification?token=' + token + '<br />',
@@ -149,7 +149,7 @@ const solves = (request, response) => {
 };
 
 const ranking = (request, response) => {
-    pool.query('SELECT id, name, email, points FROM users WHERE verified = true ORDER BY points DESC', (error, dbRes) => {
+    pool.query('SELECT id, name, email, points FROM users WHERE admin = false AND verified = true ORDER BY points DESC', (error, dbRes) => {
         if (error) {
             throw error;
         }
