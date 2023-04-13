@@ -48,10 +48,14 @@ The postgres database should contain two tables with following columns:
     - `password` (required) - text, hash of password
     - `points` (default: 0) - integer, number of points for solving challenges
     - `solves` (default: []) - integer[], array with id's of solved challenges
-    - `admin` (defalut: false) - boolean, admin permissions
+    - `admin` (defalut: 0) - integer, level of permissions
     - `verified` (default: false) - boolean, has user verified email address
     - `submitted` (default: 2005-04-02 21:37:00) - timestamp, moment of last answer submit
 
+`admin` has 3 levels of permissions:
+- 0: user
+- 1: teacher - can solve challenges but doesn't apear in ranking
+- 2: admin - can **EVERYTHING**
 
 ## Endpoints
 
