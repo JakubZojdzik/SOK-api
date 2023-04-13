@@ -127,7 +127,7 @@ const sendAnswer = (request, response) => {
                                 if (error) {
                                     throw error;
                                 }
-                                pool.query('UPDATE challenges SET solves=solves+1', (error) => {
+                                pool.query('UPDATE challenges SET solves=solves+1 WHERE id=$1', [challId], (error) => {
                                     if (error) {
                                         throw error;
                                     }
