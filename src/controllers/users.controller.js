@@ -152,7 +152,7 @@ const solves = (request, response) => {
 };
 
 const ranking = (request, response) => {
-    pool.query('SELECT id, name, email, points FROM users WHERE admin = false AND verified = true ORDER BY points DESC', (error, dbRes) => {
+    pool.query('SELECT id, name, email, points FROM users WHERE admin = 0 AND verified = true ORDER BY points DESC', (error, dbRes) => {
         if (error) {
             throw error;
         }
@@ -172,7 +172,7 @@ const isAdmin = (request, response) => {
         if (!dbRes || !dbRes.rows || !dbRes.rows.length) {
             return response.status(200).send(false);
         } else {
-            return response.status(200).send(dbRes.rows[0]['admin']);
+            return response.status(200).send(dbRes.rows[0]['admin'] === 2);
         }
     });
 };

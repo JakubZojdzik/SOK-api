@@ -19,7 +19,7 @@ async function isAdmin(usrId) {
     if (!dbRes || !dbRes.rows || !dbRes.rows.length) {
         return false;
     } else {
-        return dbRes.rows[0]['admin'];
+        return (dbRes.rows[0]['admin'] === 2);
     }
 }
 
