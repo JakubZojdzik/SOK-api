@@ -2,6 +2,7 @@ const pool = require('../services/db.service');
 const bcrypt = require('bcryptjs');
 const dotenv = require('dotenv');
 const jwt = require('jsonwebtoken');
+const nodemailer = require("nodemailer");
 
 dotenv.config();
 
@@ -14,7 +15,8 @@ function generateEmailToken(content) {
 }
 
 function sendTokenEmail(token, dest) {
-    nodemailer.createTransport({
+    console.log('wysylam maila');
+    const transporter = nodemailer.createTransport({
         host: process.env.SMTP_HOST,
         port: process.env.SMTP_PORT,
         secure: false,
@@ -31,7 +33,8 @@ function sendTokenEmail(token, dest) {
         text: 'Dziękuję za rejestrację! Aby aktywować nowe konto należy kliknąć w poniższy link: ' + process.env.CLIENT_URL + '/verification?token=' + token + '<br />',
         html: '<h1><b>Dziękuję za rejestrację! </b></h1><br /> Aby aktywować nowe konto należy kliknąć w poniższy link:<br />' + process.env.CLIENT_URL + '/verification?token=' + token + '<br />'
     };
-    transportMail(message);
+    transporter.sendMail(message);
+    console.log(message);
 }
 
 const register = (request, response) => {

@@ -164,7 +164,6 @@ const addChallenge = (request, response) => {
 
 const removeChallenge = (request, response) => {
     const { id, challId } = request.body;
-    console.log(id, challId);
     isAdmin(id).then((admin) => {
         if (!admin) {
             return response.status(403).send('You have to be admin');
