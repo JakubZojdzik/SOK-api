@@ -2,9 +2,19 @@ const pool = require('../services/db.service');
 const bcrypt = require('bcryptjs');
 const dotenv = require('dotenv');
 const jwt = require('jsonwebtoken');
-const nodemailer = require("nodemailer");
+const nodemailer = require('nodemailer');
 
 dotenv.config();
+
+const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: process.env.SMTP_PORT,
+    secure: false,
+    auth: {
+        user: process.env.SMPT_USER,
+        pass: process.env.SMTP_PASSWORD
+    }
+});
 
 function generateAccessToken(username) {
     return jwt.sign(username, process.env.TOKEN_SECRET, { expiresIn: '21600s' });
@@ -16,23 +26,25 @@ function generateEmailToken(content) {
 
 function sendTokenEmail(token, dest) {
     console.log('wysylam maila');
-    const transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
-        port: process.env.SMTP_PORT,
-        secure: false,
-        auth: {
-            user: process.env.SMPT_USER,
-            pass: process.env.SMTP_PASSWORD
-        }
-    });
 
     let message = {
         from: '"mądrALO Team" <' + process.env.SMTP_HOST + '>',
         to: dest,
         subject: 'Weryfikacja rejestracji',
         text: 'Dziękuję za rejestrację! Aby aktywować nowe konto należy kliknąć w poniższy link: ' + process.env.CLIENT_URL + '/verification?token=' + token + '<br />',
-        html: '<h1><b>Dziękuję za rejestrację! </b></h1><br /> Aby aktywować nowe konto należy kliknąć w poniższy link:<br />' + process.env.CLIENT_URL + '/verification?token=' + token + '<br />'
+        html: '<h1><b>Dziękuję za rejestrację! </b></h1><br /> Aby aktywować nowe konto należy kliknąć w poniższy link:<br /><a href="' + process.env.CLIENT_URL + '/verification?token=' + token + '">Weryfikuj</a><br />'
     };
+    transporter.sendMail(message);
+    console.log(message);
+}
+
+function sendVerifyToken() {
+    console.log('Wsylam maila');
+
+    let message = {
+        // ...
+    };
+
     transporter.sendMail(message);
     console.log(message);
 }
@@ -62,7 +74,6 @@ const register = (request, response) => {
         if (error) {
             throw error;
         }
-        console.log(dbRes.rows.length);
         if (dbRes.rows.length) {
             return response.status(401).send('Konto o danym mailu lub nazwie już istnieje!');
         } else {
