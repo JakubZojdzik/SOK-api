@@ -11,9 +11,9 @@ router.get('/solves', usersController.solves);
 router.get('/islogged', usersController.isLogged);
 router.get('/ranking', usersController.ranking);
 router.get('/isAdmin', usersController.isAdmin);
-router.get('/verify', usersController.verifyRegistration);
-router.get('/verifyPass', usersController.verifyPasswordChange);
 
+router.post('/verify', usersController.verifyRegistration);
+router.post('/verifyPass', usersController.verifyPasswordChange);
 router.post('/register', usersController.register);
 router.post('/changePassword', usersController.changePassword);
 router.post('/login', usersController.login);

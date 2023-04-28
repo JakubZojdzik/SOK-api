@@ -47,8 +47,8 @@ function sendVerifyToken(token, dest) {
     sendMail(
         dest,
         'Zmiana hasła',
-        'Dziękuję za rejestrację! Aby aktywować nowe konto należy kliknąć w poniższy link: ' + process.env.CLIENT_URL + '/verification?token=' + token + '<br />',
-        '<h1><b>Dziękuję za rejestrację! </b></h1><br /> Aby aktywować nowe konto należy kliknąć w poniższy link:<br /><a href="' + process.env.CLIENT_URL + '/verification?token=' + token + '">Weryfikuj</a><br />'
+        'Aby zmienić hasło należy kliknąć w poniższy link: ' + process.env.CLIENT_URL + '/passChange?token=' + token + '<br />',
+        '<p>Aby zmienić hasło należy kliknąć w poniższy link:<br /><a href="' + process.env.CLIENT_URL + '/passChange?token=' + token + '">Weryfikuj</a><br /></p>'
     );
 }
 
@@ -66,7 +66,7 @@ const register = (request, response) => {
         return response.status(401).send('Nazwa powinna zawierać tylko litery, liczby, kropki, myślniki i podkreślniki!');
     }
 
-    if (!/^[a-zA-Z0-9!@#$%^&*()_+=[\]{}|;:',./?`~\-]{16,32}$/.test(password)) {
+    if (!/^[a-zA-Z0-9!@#$%^&*()_+=[\]{}|;:',./?`~\-]{8,32}$/.test(password)) {
         return response.status(401).send('Nieprawidłowe hasło!');
     }
     if (password !== passwordRep) {
@@ -100,7 +100,7 @@ const register = (request, response) => {
 const changePassword = (request, response) => {
     const { email, password, passwordRep } = request.body;
 
-    if (!/^[a-zA-Z0-9!@#$%^&*()_+=[\]{}|;:',./?`~\-]{16,32}$/.test(password)) {
+    if (!/^[a-zA-Z0-9!@#$%^&*()_+=[\]{}|;:',./?`~\-]{8,32}$/.test(password)) {
         return response.status(401).send('Nieprawidłowe hasło!');
     }
     if (password !== passwordRep) {
