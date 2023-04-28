@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const cors = require('cors')
 const usersRouter = require('./src/routes/users.route');
 const challengesRouter = require('./src/routes/challenges.route');
+const rateLimit = require('express-rate-limit')
 
 const app = express();
 const port = 8080;
@@ -13,6 +14,26 @@ app.use(
         extended: true
     })
 );
+
+const defLimiter = rateLimit({
+	windowMs: 60 * 1000, // 1 minute
+	max: 10, // 10 requests per minute
+	standardHeaders: false, // Disable rate limit info in the `RateLimit-*` headers
+	legacyHeaders: true, // Enable the `X-RateLimit-*` headers
+})
+
+const longLimiter = rateLimit({
+	windowMs: 60 * 1000, // 1 minute
+	max: 1, // 1 requests per minute
+	standardHeaders: false, // Disable rate limit info in the `RateLimit-*` headers
+	legacyHeaders: true, // Enable the `X-RateLimit-*` headers
+})
+
+app.use('/', defLimiter)
+app.use('/users/register', longLimiter)
+app.use('/users/changePassword', longLimiter)
+app.use('/users/verifyPass', longLimiter)
+app.use('/users/verify', longLimiter)
 
 app.get('/', (request, response) => {
     response.json({ info: 'Node.js, Express, and Postgres API' });
