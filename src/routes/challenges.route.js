@@ -11,6 +11,7 @@ router.use('/byId/:challId', authenticateToken);
 
 router.get('/inactiveChallenges', challengesController.getInactiveChallenges);
 router.get('/currentChallenges', challengesController.getCurrentChallenges);
+router.get('/competitionTimeRange', challengesController.competitionTimeRange);
 router.get('/byId/:challId', challengesController.getChallengeById);
 
 router.post('/solve', challengesController.sendAnswer);

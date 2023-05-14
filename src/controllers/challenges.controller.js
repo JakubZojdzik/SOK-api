@@ -175,11 +175,16 @@ const removeChallenge = (request, response) => {
     });
 };
 
+const competitionTimeRange = (request, response) => {
+    response.status(200).json({start: process.env.COMPETITION_START, end: process.env.COMPETITION_END});
+}
+
 module.exports = {
     sendAnswer,
     getChallengeById,
     getInactiveChallenges,
     getCurrentChallenges,
     addChallenge,
-    removeChallenge
+    removeChallenge,
+    competitionTimeRange
 };
