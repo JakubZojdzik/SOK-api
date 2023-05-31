@@ -122,21 +122,37 @@ const sendAnswer = (request, response) => {
                         if (!chall || !chall['answer'] || !chall['points'] || !chall['id']) {
                             return response.status(400).send('Challenge does not exist');
                         }
-                        if (chall['answer'] === answer) {
-                            pool.query('UPDATE users SET points=points+$1, solves=array_append(solves,$2) WHERE id=$3 AND verified = true', [chall['points'], chall['id'], id], (error) => {
-                                if (error) {
-                                    throw error;
-                                }
-                                pool.query('UPDATE challenges SET solves=solves+1 WHERE id=$1', [challId], (error) => {
+                        if (new Date(Date.parse(process.env.COMPETITION_END)) < new Date())
+                        {
+                            if (chall['answer'] === answer) {
+                                pool.query('UPDATE users SET points=points+$1, solves=array_append(solves,$2) WHERE id=$3 AND verified = true', [chall['points'], chall['id'], id], (error) => {
+                                    if (error) {
+                                        throw error;
+                                    }
+                                    pool.query('UPDATE challenges SET solves=solves+1 WHERE id=$1', [challId], (error) => {
+                                        if (error) {
+                                            throw error;
+                                        }
+                                        return response.status(200).send(true);
+                                    });
+                                });
+                            } else {
+                                pool.query("UPDATE users SET submitted=now() AT TIME ZONE 'CEST' WHERE id=$1 AND verified = true", [id]);
+                                return response.status(200).send(false);
+                            }
+                        }
+                        else
+                        {
+                            if (chall['answer'] === answer) {
+                                pool.query('UPDATE users SET solves=array_append(solves,$2) WHERE id=$3 AND verified = true', [chall['points'], chall['id'], id], (error) => {
                                     if (error) {
                                         throw error;
                                     }
                                     return response.status(200).send(true);
                                 });
-                            });
-                        } else {
-                            pool.query("UPDATE users SET submitted=now() AT TIME ZONE 'CEST' WHERE id=$1 AND verified = true", [id]);
-                            return response.status(200).send(false);
+                            } else {
+                                return response.status(200).send(false);
+                            }
                         }
                     }
                 });
