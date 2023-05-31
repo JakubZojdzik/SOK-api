@@ -122,7 +122,7 @@ const sendAnswer = (request, response) => {
                         if (!chall || !chall['answer'] || !chall['points'] || !chall['id']) {
                             return response.status(400).send('Challenge does not exist');
                         }
-                        if (new Date(Date.parse(process.env.COMPETITION_END)) < new Date())
+                        if ((new Date(Date.parse(process.env.COMPETITION_END))) >= Date.now())
                         {
                             if (chall['answer'] === answer) {
                                 pool.query('UPDATE users SET points=points+$1, solves=array_append(solves,$2) WHERE id=$3 AND verified = true', [chall['points'], chall['id'], id], (error) => {
@@ -144,7 +144,7 @@ const sendAnswer = (request, response) => {
                         else
                         {
                             if (chall['answer'] === answer) {
-                                pool.query('UPDATE users SET solves=array_append(solves,$2) WHERE id=$3 AND verified = true', [chall['points'], chall['id'], id], (error) => {
+                                pool.query('UPDATE users SET solves=array_append(solves,$1) WHERE id=$2 AND verified = true', [chall['id'], id], (error) => {
                                     if (error) {
                                         throw error;
                                     }
