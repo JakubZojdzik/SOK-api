@@ -65,6 +65,10 @@ function logSubmit(request) {
 }
 
 const getCurrentChallenges = (request, response) => {
+    if (new Date(Date.parse(process.env.COMPETITION_START)) >= Date.now())
+    {
+        return response.status(200).send(null);
+    }
     pool.query("SELECT * FROM challenges WHERE start <= now() AT TIME ZONE 'CEST' ORDER BY start ASC", (error, results) => {
         if (error) {
             throw error;
@@ -99,6 +103,10 @@ const getChallengeById = (request, response) => {
         let tmp = " AND start <= now() AT TIME ZONE 'CEST'";
         if (admin) {
             tmp = '';
+        }
+        else if (new Date(Date.parse(process.env.COMPETITION_START)) >= Date.now())
+        {
+            return response.status(400).send('Challenge does not exist');
         }
         pool.query('SELECT * FROM challenges WHERE id = $1' + tmp, [challId], (error, dbRes) => {
             if (error) {
