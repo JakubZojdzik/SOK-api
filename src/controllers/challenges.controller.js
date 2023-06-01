@@ -57,7 +57,6 @@ function logSubmit(request) {
     let d = new Date();
     msg += d.toString() + '\n';
 
-    console.log(msg);
     fs.appendFile("submits.log", msg, (err) => {
         if(err) {
             return console.log(err);
