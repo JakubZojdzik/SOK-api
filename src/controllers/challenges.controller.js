@@ -99,7 +99,7 @@ const getChallengeById = (request, response) => {
 
 const sendAnswer = (request, response) => {
     const { id, challId, answer } = request.body;
-    if (!id) {
+    if (!id || (new Date(Date.parse(process.env.COMPETITION_START))) >= Date.now()) {
         return response.status(403).send('Not permited!');
     }
     timeToSubmit(id).then((t) => {
@@ -137,7 +137,7 @@ const sendAnswer = (request, response) => {
                                     });
                                 });
                             } else {
-                                pool.query("UPDATE users SET submitted=now() AT TIME ZONE 'CEST' WHERE id=$1 AND verified = true", [id]);
+                                pool.query("UPDATE users SET points=points-1, submitted=now() AT TIME ZONE 'CEST' WHERE id=$1 AND verified = true", [id]);
                                 return response.status(200).send(false);
                             }
                         }
