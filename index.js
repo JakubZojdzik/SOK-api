@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const usersRouter = require('./src/routes/users.route');
 const challengesRouter = require('./src/routes/challenges.route');
+const announcementsRouter = require('./src/routes/announcements.route');
 const rateLimit = require('express-rate-limit');
 const app = express();
 const port = 8080;
@@ -39,6 +40,7 @@ app.get('/', (request, response) => {
 });
 app.use('/users', usersRouter);
 app.use('/challenges', challengesRouter);
+app.use('/announcements', announcementsRouter);
 
 app.listen(port, () => {
     console.log(`App running on port ${port}.`);
