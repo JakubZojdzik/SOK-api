@@ -4,7 +4,6 @@ const cors = require('cors');
 const usersRouter = require('./src/routes/users.route');
 const challengesRouter = require('./src/routes/challenges.route');
 const rateLimit = require('express-rate-limit');
-
 const app = express();
 const port = 8080;
 

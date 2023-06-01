@@ -1,7 +1,6 @@
 const pool = require('../services/db.service');
-const bcrypt = require('bcryptjs');
 const dotenv = require('dotenv');
-const jwt = require('jsonwebtoken');
+const fs = require('fs');
 
 dotenv.config();
 
@@ -19,7 +18,7 @@ async function isAdmin(usrId) {
     if (!dbRes || !dbRes.rows || !dbRes.rows.length) {
         return false;
     } else {
-        return (dbRes.rows[0]['admin'] === 2);
+        return dbRes.rows[0]['admin'] === 2;
     }
 }
 
@@ -46,6 +45,24 @@ async function timeToSubmit(usrId) {
         [usrId]
     );
     return dbRes.rows[0]['minutes'];
+}
+
+function logSubmit(request) {
+    const { id, challId, answer } = request.body;
+
+    let msg = id + ', ';
+    msg += challId + ', ';
+    msg += answer + ', ';
+    msg += (request.headers['x-forwarded-for'] || request.socket.remoteAddress) + ', ';
+    let d = new Date();
+    msg += d.toString() + '\n';
+
+    console.log(msg);
+    fs.appendFile("submits.log", msg, (err) => {
+        if(err) {
+            return console.log(err);
+        }
+    });
 }
 
 const getCurrentChallenges = (request, response) => {
@@ -98,8 +115,9 @@ const getChallengeById = (request, response) => {
 };
 
 const sendAnswer = (request, response) => {
+    logSubmit(request);
     const { id, challId, answer } = request.body;
-    if (!id || (new Date(Date.parse(process.env.COMPETITION_START))) >= Date.now()) {
+    if (!id || new Date(Date.parse(process.env.COMPETITION_START)) >= Date.now()) {
         return response.status(403).send('Not permited!');
     }
     timeToSubmit(id).then((t) => {
@@ -122,8 +140,7 @@ const sendAnswer = (request, response) => {
                         if (!chall || !chall['answer'] || !chall['points'] || !chall['id']) {
                             return response.status(400).send('Challenge does not exist');
                         }
-                        if ((new Date(Date.parse(process.env.COMPETITION_END))) >= Date.now())
-                        {
+                        if (new Date(Date.parse(process.env.COMPETITION_END)) >= Date.now()) {
                             if (chall['answer'] === answer) {
                                 pool.query('UPDATE users SET points=points+$1, solves=array_append(solves,$2) WHERE id=$3 AND verified = true', [chall['points'], chall['id'], id], (error) => {
                                     if (error) {
@@ -140,9 +157,7 @@ const sendAnswer = (request, response) => {
                                 pool.query("UPDATE users SET points=points-1, submitted=now() AT TIME ZONE 'CEST' WHERE id=$1 AND verified = true", [id]);
                                 return response.status(200).send(false);
                             }
-                        }
-                        else
-                        {
+                        } else {
                             if (chall['answer'] === answer) {
                                 pool.query('UPDATE users SET solves=array_append(solves,$1) WHERE id=$2 AND verified = true', [chall['id'], id], (error) => {
                                     if (error) {
@@ -192,8 +207,8 @@ const removeChallenge = (request, response) => {
 };
 
 const competitionTimeRange = (request, response) => {
-    response.status(200).json({start: process.env.COMPETITION_START, end: process.env.COMPETITION_END});
-}
+    response.status(200).json({ start: process.env.COMPETITION_START, end: process.env.COMPETITION_END });
+};
 
 module.exports = {
     sendAnswer,
