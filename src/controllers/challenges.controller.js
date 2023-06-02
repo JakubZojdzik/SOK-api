@@ -65,15 +65,17 @@ function logSubmit(request) {
 }
 
 const getCurrentChallenges = (request, response) => {
-    if (new Date(Date.parse(process.env.COMPETITION_START)) >= Date.now())
-    {
-        return response.status(200).send(null);
-    }
-    pool.query("SELECT * FROM challenges WHERE start <= now() AT TIME ZONE 'CEST' ORDER BY start ASC", (error, results) => {
-        if (error) {
-            throw error;
+    isAdmin(id).then((admin) => {
+        if (new Date(Date.parse(process.env.COMPETITION_START)) >= Date.now() && !admin)
+        {
+            return response.status(200).send(null);
         }
-        response.status(200).json(results.rows);
+        pool.query("SELECT * FROM challenges WHERE start <= now() AT TIME ZONE 'CEST' ORDER BY start ASC", (error, results) => {
+            if (error) {
+                throw error;
+            }
+            response.status(200).json(results.rows);
+        });
     });
 };
 
