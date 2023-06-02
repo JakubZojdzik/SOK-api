@@ -69,7 +69,7 @@ const getCurrentChallenges = (request, response) => {
     isAdmin(id).then((admin) => {
         if (new Date(Date.parse(process.env.COMPETITION_START)) >= Date.now() && !admin)
         {
-            return response.status(200).send(null);
+            return response.status(200).send({});
         }
         pool.query("SELECT * FROM challenges WHERE start <= now() AT TIME ZONE 'CEST' ORDER BY start ASC", (error, results) => {
             if (error) {
