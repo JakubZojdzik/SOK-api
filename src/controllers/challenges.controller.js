@@ -71,7 +71,7 @@ const getCurrentChallenges = (request, response) => {
         {
             return response.status(200).send([]);
         }
-        pool.query("SELECT * FROM challenges WHERE start <= now() AT TIME ZONE 'CEST' ORDER BY start ASC", (error, results) => {
+        pool.query("SELECT * FROM challenges WHERE start <= now() AT TIME ZONE 'CEST' ORDER BY start DESC, points DESC", (error, results) => {
             if (error) {
                 throw error;
             }
@@ -90,7 +90,7 @@ const getInactiveChallenges = (request, response) => {
         if (!admin) {
             return response.status(403).send('Not permited');
         }
-        pool.query("SELECT * FROM challenges WHERE start > now() AT TIME ZONE 'CEST' ORDER BY start ASC", (error, results) => {
+        pool.query("SELECT * FROM challenges WHERE start > now() AT TIME ZONE 'CEST' ORDER BY start DESC, points DESC", (error, results) => {
             if (error) {
                 throw error;
             }
