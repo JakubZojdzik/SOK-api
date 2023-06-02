@@ -65,6 +65,7 @@ function logSubmit(request) {
 }
 
 const getCurrentChallenges = (request, response) => {
+    const id = request.body.id;
     isAdmin(id).then((admin) => {
         if (new Date(Date.parse(process.env.COMPETITION_START)) >= Date.now() && !admin)
         {
