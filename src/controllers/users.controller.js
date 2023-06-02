@@ -11,7 +11,7 @@ const transporter = nodemailer.createTransport({
     port: process.env.SMTP_PORT,
     secure: true,
     auth: {
-        user: process.env.SMPT_USER,
+        user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASSWORD
     }
 });
@@ -24,7 +24,7 @@ function sendMail(destination, subject, text, html) {
     console.log('wysylam maila');
 
     let message = {
-        from: '"mądrALO Team" <' + process.env.SMTP_HOST + '>',
+        from: process.env.SMTP_FROM,
         to: destination,
         subject: subject,
         text: text,
@@ -35,21 +35,11 @@ function sendMail(destination, subject, text, html) {
 }
 
 function sendTokenEmail(token, dest) {
-    sendMail(
-        dest,
-        'Weryfikacja rejestracji',
-        'Dziękuję za rejestrację! Aby aktywować nowe konto należy kliknąć w poniższy link: ' + process.env.CLIENT_URL + '/verification?token=' + token + '<br />',
-        '<h1><b>Dziękuję za rejestrację! </b></h1><br /> Aby aktywować nowe konto należy kliknąć w poniższy link:<br /><a href="' + process.env.CLIENT_URL + '/verification?token=' + token + '">Weryfikuj</a><br />'
-    );
+    sendMail(dest, 'Weryfikacja rejestracji', 'Dziękuję za rejestrację! Aby aktywować nowe konto należy kliknąć w poniższy link: ' + process.env.CLIENT_URL + '/verification?token=' + token + '<br />', '<h1><b>Dziękuję za rejestrację! </b></h1><br /> Aby aktywować nowe konto należy kliknąć w poniższy link:<br /><a href="' + process.env.CLIENT_URL + '/verification?token=' + token + '">Weryfikuj</a><br />');
 }
 
 function sendVerifyToken(token, dest) {
-    sendMail(
-        dest,
-        'Zmiana hasła',
-        'Aby zmienić hasło należy kliknąć w poniższy link: ' + process.env.CLIENT_URL + '/passChange?token=' + token + '<br />',
-        '<p>Aby zmienić hasło należy kliknąć w poniższy link:<br /><a href="' + process.env.CLIENT_URL + '/passChange?token=' + token + '">Weryfikuj</a><br /></p>'
-    );
+    sendMail(dest, 'Zmiana hasła', 'Aby zmienić hasło należy kliknąć w poniższy link: ' + process.env.CLIENT_URL + '/passChange?token=' + token + '<br />', '<p>Aby zmienić hasło należy kliknąć w poniższy link:<br /><a href="' + process.env.CLIENT_URL + '/passChange?token=' + token + '">Weryfikuj</a><br /></p>');
 }
 
 const register = (request, response) => {
@@ -127,7 +117,7 @@ const changePassword = (request, response) => {
                 .catch((err) => console.error(err.message));
         }
     });
-}
+};
 
 const verifyRegistration = (request, response) => {
     const { token } = request.body;
@@ -148,7 +138,7 @@ const verifyRegistration = (request, response) => {
 const verifyPasswordChange = (request, response) => {
     const { token } = request.body;
     jwt.verify(token, process.env.TOKEN_SECRET, (err, tokenRes) => {
-        if (err || (!tokenRes['email']) || (!tokenRes['hash'])) {
+        if (err || !tokenRes['email'] || !tokenRes['hash']) {
             response.status(401).send('Cant verify token');
         } else {
             pool.query('UPDATE users SET password = $1 WHERE email=$2', [tokenRes['hash'], tokenRes['email']], (error) => {
@@ -248,5 +238,5 @@ module.exports = {
     isAdmin,
     verifyRegistration,
     changePassword,
-    verifyPasswordChange,
+    verifyPasswordChange
 };
