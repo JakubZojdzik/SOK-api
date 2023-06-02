@@ -20,6 +20,21 @@ const getAll = (request, response) => {
     });
 };
 
+const addAnnouncement = (request, response) => {
+    const { id, title, content, author } = request.body;
+    isAdmin(id).then((admin) => {
+        if (!admin) {
+            return response.status(403).send('You have to be admin');
+        }
+        pool.query('INSERT INTO announcements (title, author, content) VALUES ($1, $2, $3)', [title, author, content], (error) => {
+            if (error) {
+                throw error;
+            }
+            response.status(201).send('Announcement added');
+        });
+    });
+};
+
 const removeAnnouncement = (request, response) => {
     const { id, annId } = request.body;
     isAdmin(id).then((admin) => {
@@ -37,5 +52,6 @@ const removeAnnouncement = (request, response) => {
 
 module.exports = {
     getAll,
-    removeAnnouncement
+    removeAnnouncement,
+    addAnnouncement
 };
