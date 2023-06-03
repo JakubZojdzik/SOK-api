@@ -11,8 +11,8 @@ async function isAdmin(usrId) {
 }
 
 
-const getAll = (request, response) => {
-    pool.query('SELECT * FROM announcements ORDER BY added DESC', (error, results) => {
+const getCurrent = (request, response) => {
+    pool.query("SELECT * FROM announcements WHERE added <= now() AT TIME ZONE 'CEST' ORDER BY added DESC", (error, results) => {
         if (error) {
             throw error;
         }
@@ -20,13 +20,32 @@ const getAll = (request, response) => {
     });
 };
 
+const getInactive = (request, response) => {
+    const id = request.body.id;
+    if (!id) {
+        return response.status(403).send('Not permited!');
+    }
+
+    isAdmin(id).then((admin) => {
+        if (!admin) {
+            return response.status(403).send('Not permited');
+        }
+        pool.query("SELECT * FROM announcements WHERE added > now() AT TIME ZONE 'CEST' ORDER BY added DESC", (error, results) => {
+            if (error) {
+                throw error;
+            }
+            return response.status(200).json(results.rows);
+        });
+    });
+};
+
 const addAnnouncement = (request, response) => {
-    const { id, title, content, author } = request.body;
+    const { id, title, content, author, added } = request.body;
     isAdmin(id).then((admin) => {
         if (!admin) {
             return response.status(403).send('You have to be admin');
         }
-        pool.query('INSERT INTO announcements (title, author, content) VALUES ($1, $2, $3)', [title, author, content], (error) => {
+        pool.query('INSERT INTO announcements (title, author, content, added) VALUES ($1, $2, $3, $4)', [title, author, content, added], (error) => {
             if (error) {
                 throw error;
             }
@@ -51,7 +70,8 @@ const removeAnnouncement = (request, response) => {
 };
 
 module.exports = {
-    getAll,
+    getCurrent,
     removeAnnouncement,
-    addAnnouncement
+    addAnnouncement,
+    getInactive
 };
