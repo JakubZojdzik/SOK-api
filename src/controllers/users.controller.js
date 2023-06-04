@@ -56,7 +56,7 @@ const register = (request, response) => {
         return response.status(401).send('Nazwa powinna zawierać tylko litery, liczby, kropki, myślniki i podkreślniki!');
     }
 
-    if (!/^[a-zA-Z0-9!@#$%^&*()_+=[\]{}|;:',./?`~\-]{8,32}$/.test(password)) {
+    if (!/^[a-zA-Z0-9!@#$%^&*()_+=[\]{}|;:'"<>,\\./?`~\-]{8,32}$/.test(password)) {
         return response.status(401).send('Nieprawidłowe hasło!');
     }
     if (password !== passwordRep) {
@@ -90,7 +90,7 @@ const register = (request, response) => {
 const changePassword = (request, response) => {
     const { email, password, passwordRep } = request.body;
 
-    if (!/^[a-zA-Z0-9!@#$%^&*()_+=[\]{}|;:',./?`~\-]{8,32}$/.test(password)) {
+    if (!/^[a-zA-Z0-9!@#$%^&*()_+=[\]{}|;:'"<>,\\./?`~\-]{8,32}$/.test(password)) {
         return response.status(401).send('Nieprawidłowe hasło!');
     }
     if (password !== passwordRep) {
