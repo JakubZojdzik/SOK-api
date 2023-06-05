@@ -149,7 +149,7 @@ const sendAnswer = (request, response) => {
                         }
                         if (new Date(Date.parse(process.env.COMPETITION_END)) >= Date.now()) {
                             if (chall['answer'] === answer) {
-                                pool.query('UPDATE users SET points=points+$1, solves=array_append(solves,$2) WHERE id=$3 AND verified = true', [chall['points'], chall['id'], id], (error) => {
+                                pool.query('UPDATE users SET points=points+$1, solves=array_append(solves,$2), submitted_ac=now() WHERE id=$3 AND verified = true', [chall['points'], chall['id'], id], (error) => {
                                     if (error) {
                                         throw error;
                                     }
