@@ -107,10 +107,10 @@ const getChallengeById = (request, response) => {
         if (admin) {
             tmp = '';
         }
-        else if (new Date(Date.parse(process.env.COMPETITION_START)) >= Date.now())
-        {
-            return response.status(400).send('Challenge does not exist');
-        }
+        // else if (new Date(Date.parse(process.env.COMPETITION_START)) >= Date.now())
+        // {
+        //     return response.status(400).send('Challenge does not exist');
+        // }
         pool.query('SELECT * FROM challenges WHERE id = $1' + tmp, [challId], (error, dbRes) => {
             if (error) {
                 throw error;
