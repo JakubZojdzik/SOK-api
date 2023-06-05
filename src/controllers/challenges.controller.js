@@ -131,6 +131,10 @@ const sendAnswer = (request, response) => {
     {
         return response.status(400).send('Za długa odpowiedź!');
     }
+    if (answer.length === 0)
+    {
+        return response.status(400).send('Raczej nie chcesz tego robić...');
+    }
     timeToSubmit(id).then((t) => {
         if (t != '0') {
             response.status(400).send('Musisz odczekać jeszcze ' + t + ' min');
