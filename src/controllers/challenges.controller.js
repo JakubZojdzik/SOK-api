@@ -127,9 +127,6 @@ const getChallengeById = (request, response) => {
 const sendAnswer = (request, response) => {
     logSubmit(request);
     const { id, challId, answer } = request.body;
-    if (!id || new Date(Date.parse(process.env.COMPETITION_START)) >= Date.now()) {
-        return response.status(403).send('Not permited!');
-    }
     timeToSubmit(id).then((t) => {
         if (t != '0') {
             response.status(400).send('Musisz odczekać jeszcze ' + t + ' min');
