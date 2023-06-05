@@ -65,18 +65,18 @@ function logSubmit(request) {
 }
 
 const getCurrentChallenges = (request, response) => {
-    const id = request.body.id;
-    isAdmin(id).then((admin) => {
-        if (new Date(Date.parse(process.env.COMPETITION_START)) >= Date.now() && !admin)
-        {
-            return response.status(200).send([]);
+    // const id = request.body.id;
+    // isAdmin(id).then((admin) => {
+    //     if (new Date(Date.parse(process.env.COMPETITION_START)) >= Date.now() && !admin)
+    //     {
+    //         return response.status(200).send([]);
+    //     }
+    // });
+    pool.query("SELECT * FROM challenges WHERE start <= now() AT TIME ZONE 'CEST' ORDER BY start DESC, points DESC", (error, results) => {
+        if (error) {
+            throw error;
         }
-        pool.query("SELECT * FROM challenges WHERE start <= now() AT TIME ZONE 'CEST' ORDER BY start DESC, points DESC", (error, results) => {
-            if (error) {
-                throw error;
-            }
-            response.status(200).json(results.rows);
-        });
+        response.status(200).json(results.rows);
     });
 };
 
