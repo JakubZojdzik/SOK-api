@@ -51,7 +51,7 @@ function logSubmit(request, res) {
     const { id, challId, answer } = request.body;
 
     let msg = res + ': ';
-    msg = id + ', ';
+    msg += id + ', ';
     msg += challId + ', ';
     msg += answer + ', ';
     msg += (request.headers['x-forwarded-for'] || request.socket.remoteAddress) + ', ';
