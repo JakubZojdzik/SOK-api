@@ -47,10 +47,11 @@ async function timeToSubmit(usrId) {
     return dbRes.rows[0]['minutes'];
 }
 
-function logSubmit(request) {
+function logSubmit(request, res) {
     const { id, challId, answer } = request.body;
 
-    let msg = id + ', ';
+    let msg = res + ': ';
+    msg = id + ', ';
     msg += challId + ', ';
     msg += answer + ', ';
     msg += (request.headers['x-forwarded-for'] || request.socket.remoteAddress) + ', ';
@@ -125,7 +126,6 @@ const getChallengeById = (request, response) => {
 };
 
 const sendAnswer = (request, response) => {
-    logSubmit(request);
     const { id, challId, answer } = request.body;
     if (answer.length >= 100)
     {
@@ -153,6 +153,7 @@ const sendAnswer = (request, response) => {
                         }
                         if (new Date(Date.parse(process.env.COMPETITION_END)) >= Date.now()) {
                             if (chall['answer'] === answer) {
+                                logSubmit(request, 'AC');
                                 pool.query('UPDATE users SET points=points+$1, solves=array_append(solves,$2), submitted_ac=now() WHERE id=$3 AND verified = true', [chall['points'], chall['id'], id], (error) => {
                                     if (error) {
                                         throw error;
@@ -165,6 +166,7 @@ const sendAnswer = (request, response) => {
                                     });
                                 });
                             } else {
+                                logSubmit(request, 'WA');
                                 pool.query("UPDATE users SET points=points-1, submitted=now() AT TIME ZONE 'CEST' WHERE id=$1 AND verified = true", [id]);
                                 return response.status(200).send(false);
                             }
