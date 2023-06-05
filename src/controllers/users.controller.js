@@ -63,7 +63,7 @@ const register = (request, response) => {
         return response.status(401).send('Hasła są różne!');
     }
 
-    pool.query('SELECT * FROM users WHERE email = $1 OR name = $2', [email, name], (error, dbRes) => {
+    pool.query('SELECT * FROM users WHERE verified = true AND (email = $1 OR name = $2)', [email, name], (error, dbRes) => {
         if (error) {
             throw error;
         }
