@@ -127,6 +127,10 @@ const getChallengeById = (request, response) => {
 const sendAnswer = (request, response) => {
     logSubmit(request);
     const { id, challId, answer } = request.body;
+    if (answer.length >= 100)
+    {
+        return response.status(400).send('Za długa odpowiedź!');
+    }
     timeToSubmit(id).then((t) => {
         if (t != '0') {
             response.status(400).send('Musisz odczekać jeszcze ' + t + ' min');
