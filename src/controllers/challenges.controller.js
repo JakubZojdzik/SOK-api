@@ -133,7 +133,7 @@ const sendAnswer = (request, response) => {
     }
     if (answer.length === 0)
     {
-        return response.status(400).send('Raczej nie chcesz tego robić...');
+        return response.status(400).send('Wpisz odpowiedź!');
     }
     timeToSubmit(id).then((t) => {
         if (t != '0') {
