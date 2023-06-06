@@ -143,7 +143,7 @@ const sendAnswer = (request, response) => {
                 if (v == 'true') {
                     return response.status(200).send(false);
                 }
-                pool.query("SELECT id, title, content, author, points, solves, start FROM challenges WHERE id=$1 AND start <= now() AT TIME ZONE 'CEST'", [challId], (error, dbRes) => {
+                pool.query("SELECT id, title, content, author, points, answer, solves, start FROM challenges WHERE id=$1 AND start <= now() AT TIME ZONE 'CEST'", [challId], (error, dbRes) => {
                     if (error) {
                         throw error;
                     }
