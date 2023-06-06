@@ -73,7 +73,7 @@ const getCurrentChallenges = (request, response) => {
     //         return response.status(200).send([]);
     //     }
     // });
-    pool.query("SELECT * FROM challenges WHERE start <= now() AT TIME ZONE 'CEST' ORDER BY start DESC, points DESC", (error, results) => {
+    pool.query("SELECT content, points, answer, solves, start, title FROM challenges WHERE start <= now() AT TIME ZONE 'CEST' ORDER BY start DESC, points DESC", (error, results) => {
         if (error) {
             throw error;
         }
@@ -91,7 +91,7 @@ const getInactiveChallenges = (request, response) => {
         if (!admin) {
             return response.status(403).send('Not permited');
         }
-        pool.query("SELECT * FROM challenges WHERE start > now() AT TIME ZONE 'CEST' ORDER BY start DESC, points DESC", (error, results) => {
+        pool.query("SELECT content, points, answer, solves, start, title FROM challenges WHERE start > now() AT TIME ZONE 'CEST' ORDER BY start DESC, points DESC", (error, results) => {
             if (error) {
                 throw error;
             }
@@ -112,7 +112,7 @@ const getChallengeById = (request, response) => {
         // {
         //     return response.status(400).send('Challenge does not exist');
         // }
-        pool.query('SELECT * FROM challenges WHERE id = $1' + tmp, [challId], (error, dbRes) => {
+        pool.query('SELECT content, points, answer, solves, start, title FROM challenges WHERE id = $1' + tmp, [challId], (error, dbRes) => {
             if (error) {
                 throw error;
             }
@@ -143,7 +143,7 @@ const sendAnswer = (request, response) => {
                 if (v == 'true') {
                     return response.status(200).send(false);
                 }
-                pool.query("SELECT * FROM challenges WHERE id=$1 AND start <= now() AT TIME ZONE 'CEST'", [challId], (error, dbRes) => {
+                pool.query("SELECT content, points, answer, solves, start, title FROM challenges WHERE id=$1 AND start <= now() AT TIME ZONE 'CEST'", [challId], (error, dbRes) => {
                     if (error) {
                         throw error;
                     }
