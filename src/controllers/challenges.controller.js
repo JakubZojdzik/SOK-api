@@ -152,7 +152,7 @@ const sendAnswer = (request, response) => {
                     } else {
                         const chall = dbRes.rows[0];
                         if (new Date(Date.parse(process.env.COMPETITION_END)) >= Date.now()) {
-                            if (chall['answer'] === answer) {
+                            if (chall.answer === answer) {
                                 logSubmit(request, 'AC');
                                 pool.query('UPDATE users SET points=points+$1, solves=array_append(solves,$2), submitted_ac=now() WHERE id=$3 AND verified = true', [chall['points'], chall['id'], id], (error) => {
                                     if (error) {
@@ -171,8 +171,8 @@ const sendAnswer = (request, response) => {
                                 return response.status(200).send(false);
                             }
                         } else {
-                            if (chall['answer'] === answer) {
-                                pool.query('UPDATE users SET solves=array_append(solves,$1) WHERE id=$2 AND verified = true', [chall['id'], id], (error) => {
+                            if (chall.answer === answer) {
+                                pool.query('UPDATE users SET solves=array_append(solves,$1) WHERE id=$2 AND verified = true', [chall.id, id], (error) => {
                                     if (error) {
                                         throw error;
                                     }
