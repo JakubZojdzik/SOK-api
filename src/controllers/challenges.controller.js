@@ -147,14 +147,10 @@ const sendAnswer = (request, response) => {
                     if (error) {
                         throw error;
                     }
-                    if (!dbRes || !dbRes.rows || !dbRes.rows.length) {
+                    if (!dbRes || !dbRes.rows || !dbRes.rows.length || !dbRes.rows[0].id) {
                         return response.status(400).send('Challenge does not exist');
                     } else {
                         const chall = dbRes.rows[0];
-
-                        if (!chall || !chall['answer'] || !chall['points'] || !chall['id']) {
-                            return response.status(400).send('Challenge does not exist');
-                        }
                         if (new Date(Date.parse(process.env.COMPETITION_END)) >= Date.now()) {
                             if (chall['answer'] === answer) {
                                 logSubmit(request, 'AC');
