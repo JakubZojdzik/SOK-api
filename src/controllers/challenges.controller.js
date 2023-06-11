@@ -4,7 +4,7 @@ const fs = require('fs');
 
 dotenv.config();
 
-async function isSolved(usrId, challId) {
+const isSolved = async (usrId, challId) => {
     dbRes = await pool.query('SELECT ($1 = ANY ((SELECT solves FROM users WHERE id=$2 AND verified=true)::int[]))::text', [challId, usrId]);
     if (!dbRes || !dbRes.rows || !dbRes.rows.length) {
         return 'false';
@@ -13,7 +13,7 @@ async function isSolved(usrId, challId) {
     }
 }
 
-async function isAdmin(usrId) {
+const isAdmin = async (usrId) => {
     dbRes = await pool.query('SELECT admin FROM users WHERE id=$1 AND verified = true', [usrId]);
     if (!dbRes || !dbRes.rows || !dbRes.rows.length) {
         return false;
@@ -22,7 +22,7 @@ async function isAdmin(usrId) {
     }
 }
 
-async function timeToSubmit(usrId) {
+const timeToSubmit = async (usrId) => {
     dbRes = await pool.query(
         `
         WITH diff AS (
@@ -47,7 +47,7 @@ async function timeToSubmit(usrId) {
     return dbRes.rows[0]['minutes'];
 }
 
-function logSubmit(request, res) {
+const logSubmit = (request, res) => {
     const { id, challId, answer } = request.body;
 
     let msg = res + ': ';

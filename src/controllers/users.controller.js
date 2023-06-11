@@ -16,11 +16,11 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-function signToken(username, expTime) {
+const signToken = (username, expTime) => {
     return jwt.sign(username, process.env.TOKEN_SECRET, { expiresIn: expTime });
 }
 
-function sendMail(destination, subject, text, html) {
+const sendMail = (destination, subject, text, html) => {
     console.log('wysylam maila');
 
     let message = {
@@ -34,11 +34,11 @@ function sendMail(destination, subject, text, html) {
     console.log(message);
 }
 
-function sendTokenEmail(token, dest) {
+const sendTokenEmail = (token, dest) => {
     sendMail(dest, 'Weryfikacja rejestracji', 'Dziękuję za rejestrację! Aby aktywować nowe konto należy kliknąć w poniższy link: ' + process.env.CLIENT_URL + '/verification?token=' + token + '<br />', '<h1><b>Dziękuję za rejestrację! </b></h1><br /> Aby aktywować nowe konto należy kliknąć w poniższy link:<br /><a href="' + process.env.CLIENT_URL + '/verification?token=' + token + '">Weryfikuj</a><br />');
 }
 
-function sendVerifyToken(token, dest) {
+const sendVerifyToken = (token, dest) => {
     sendMail(dest, 'Zmiana hasła', 'Aby zmienić hasło należy kliknąć w poniższy link: ' + process.env.CLIENT_URL + '/passChange?token=' + token + '<br />', '<p>Aby zmienić hasło należy kliknąć w poniższy link:<br /><a href="' + process.env.CLIENT_URL + '/passChange?token=' + token + '">Weryfikuj</a><br /></p>');
 }
 
@@ -162,7 +162,7 @@ const login = (request, response) => {
             return response.status(401).send('Nieprawidłowe dane!');
         } else {
             baseHash = dbRes.rows[0]['password'];
-            bcrypt.compare(password, baseHash, function (err, cmpRes) {
+            bcrypt.compare(password, baseHash, (err, cmpRes) => {
                 if (err) {
                     console.log(err);
                 }
