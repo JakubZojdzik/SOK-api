@@ -50,8 +50,8 @@ const timeToSubmit = async (usrId) => {
 const logSubmit = (request, res) => {
     const { id, challId, answer } = request.body;
     let msg;
-    if (res) msg = "AC: ";
-    else msg = "WA: ";
+    if (res) msg = 'AC: ';
+    else msg = 'WA: ';
     msg += id + ', ';
     msg += challId + ', ';
     msg += answer + ', ';

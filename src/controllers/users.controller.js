@@ -21,8 +21,6 @@ const signToken = (username, expTime) => {
 };
 
 const sendMail = (destination, subject, text, html) => {
-    console.log('wysylam maila');
-
     let message = {
         from: process.env.SMTP_FROM,
         to: destination,
@@ -31,7 +29,6 @@ const sendMail = (destination, subject, text, html) => {
         html: html
     };
     transporter.sendMail(message);
-    console.log(message);
 };
 
 const sendTokenEmail = (token, dest) => {
@@ -48,14 +45,12 @@ const register = (request, response) => {
     if (!email.endsWith('@alo.pwr.edu.pl') || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         return response.status(401).send('Nieprawidłowy adres email!');
     }
-
     if (name.length < 5 || name.length > 12) {
         return response.status(401).send('Błędna długość nazwy!');
     }
     if (!/^[a-zA-Z0-9._-]+$/.test(name)) {
         return response.status(401).send('Nazwa powinna zawierać tylko litery, liczby, kropki, myślniki i podkreślniki!');
     }
-
     if (!/^[a-zA-Z0-9!@#$%^&*()_+=[\]{}|;:'"<>,\\./?`~\-]{8,32}$/.test(password)) {
         return response.status(401).send('Nieprawidłowe hasło!');
     }
@@ -186,7 +181,6 @@ const isLogged = (request, response) => {
     }
 };
 
-// Returns array with id's of solved challenges
 const solves = (request, response) => {
     const id = request.body.id;
     if (!id) {
