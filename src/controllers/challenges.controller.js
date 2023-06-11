@@ -58,8 +58,8 @@ function logSubmit(request, res) {
     let d = new Date();
     msg += d.toString() + '\n';
 
-    fs.appendFile("submits.log", msg, (err) => {
-        if(err) {
+    fs.appendFile('submits.log', msg, (err) => {
+        if (err) {
             return console.log(err);
         }
     });
@@ -125,14 +125,17 @@ const getChallengeById = (request, response) => {
     });
 };
 
+Date.prototype.fixZone = function () {
+    this.setHours(this.getHours() + 2);
+    return this;
+};
+
 const sendAnswer = (request, response) => {
     const { id, challId, answer } = request.body;
-    if (answer.length >= 100)
-    {
+    if (answer.length >= 100) {
         return response.status(400).send('Za długa odpowiedź!');
     }
-    if (answer.length === 0)
-    {
+    if (answer.length === 0) {
         return response.status(400).send('Wpisz odpowiedź!');
     }
     timeToSubmit(id).then((t) => {
@@ -151,7 +154,7 @@ const sendAnswer = (request, response) => {
                         return response.status(400).send('Challenge does not exist');
                     } else {
                         const chall = dbRes.rows[0];
-                        if (new Date(Date.parse(process.env.COMPETITION_END)) >= Date.now()) {
+                        if (new Date(Date.parse(process.env.COMPETITION_END)) >= new Date().fixZone()) {
                             if (chall.answer === answer) {
                                 logSubmit(request, 'AC');
                                 pool.query('UPDATE users SET points=points+$1, solves=array_append(solves,$2), submitted_ac=now() WHERE id=$3 AND verified = true', [chall['points'], chall['id'], id], (error) => {
@@ -168,7 +171,7 @@ const sendAnswer = (request, response) => {
                             } else {
                                 logSubmit(request, 'WA');
                                 pool.query("UPDATE users SET points=points-1, submitted=now() AT TIME ZONE 'CEST' WHERE id=$1 AND verified = true", [id]);
-                                return response.status(200).send(false);
+                                return response.status(418).send('Przed nastepną odpowiedzią musisz odczekać 10 min');
                             }
                         } else {
                             if (chall.answer === answer) {
@@ -179,7 +182,7 @@ const sendAnswer = (request, response) => {
                                     return response.status(200).send(true);
                                 });
                             } else {
-                                return response.status(200).send(false);
+                                return response.status(418).send('Błędna odpowiedź');
                             }
                         }
                     }
