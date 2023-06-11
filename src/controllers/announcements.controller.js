@@ -14,7 +14,7 @@ const getCurrent = (request, response) => {
         if (error) {
             throw error;
         }
-        response.status(200).send(results.rows);
+        return response.status(200).send(results.rows);
     });
 };
 

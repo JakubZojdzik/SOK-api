@@ -49,8 +49,9 @@ const timeToSubmit = async (usrId) => {
 
 const logSubmit = (request, res) => {
     const { id, challId, answer } = request.body;
-
-    let msg = res + ': ';
+    let msg;
+    if (res) msg = "AC: ";
+    else msg = "WA: ";
     msg += id + ', ';
     msg += challId + ', ';
     msg += answer + ', ';
@@ -65,19 +66,55 @@ const logSubmit = (request, res) => {
     });
 };
 
+Date.prototype.fixZone = function () {
+    this.setHours(this.getHours() + 2);
+    return this;
+};
+
+const compAnswers = (chall, answer, usrId) => {
+    if (new Date(Date.parse(process.env.COMPETITION_END)) >= new Date().fixZone()) {
+        if (chall.answer === answer) {
+            pool.query('UPDATE users SET points=points+$1, solves=array_append(solves,$2), submitted_ac=now() WHERE id=$3 AND verified = true', [chall.points, chall.id, usrId], (error) => {
+                if (error) {
+                    throw error;
+                }
+                pool.query('UPDATE challenges SET solves=solves+1 WHERE id=$1', [chall.id], (error) => {
+                    if (error) {
+                        throw error;
+                    }
+                    return { correct: true, info: '' };
+                });
+            });
+        } else {
+            pool.query("UPDATE users SET points=points-1, submitted=now() AT TIME ZONE 'CEST' WHERE id=$1 AND verified = true", [usrId]);
+            return { correct: false, info: 'Przed nastepną odpowiedzią musisz odczekać 10 min' };
+        }
+    } else {
+        if (chall.answer === answer) {
+            pool.query('UPDATE users SET solves=array_append(solves,$1) WHERE id=$2 AND verified = true', [chall.id, usrId], (error) => {
+                if (error) {
+                    throw error;
+                }
+                return { correct: true, info: '' };
+            });
+        } else {
+            return { correct: false, info: 'Błędna odpowiedź' };
+        }
+    }
+};
+
 const getCurrentChallenges = (request, response) => {
     const id = request.body.id;
     isAdmin(id).then((admin) => {
         if (new Date(Date.parse(process.env.COMPETITION_START)) >= new Date().fixZone() && !admin) {
             return response.status(200).send([]);
-        } else {
-            pool.query("SELECT id, title, content, author, points, solves, start FROM challenges WHERE start <= now() AT TIME ZONE 'CEST' ORDER BY start DESC, points DESC", (error, results) => {
-                if (error) {
-                    throw error;
-                }
-                response.status(200).send(results.rows);
-            });
         }
+        pool.query("SELECT id, title, content, author, points, solves, start FROM challenges WHERE start <= now() AT TIME ZONE 'CEST' ORDER BY start DESC, points DESC", (error, results) => {
+            if (error) {
+                throw error;
+            }
+            response.status(200).send(results.rows);
+        });
     });
 };
 
@@ -107,11 +144,9 @@ const getChallengeById = (request, response) => {
         let tmp = " AND start <= now() AT TIME ZONE 'CEST'";
         if (admin) {
             tmp = '';
+        } else if (new Date(Date.parse(process.env.COMPETITION_START)) >= new Date().fixZone()) {
+            return response.status(400).send('Challenge does not exist');
         }
-        // else if (new Date(Date.parse(process.env.COMPETITION_START)) >= Date.now())
-        // {
-        //     return response.status(400).send('Challenge does not exist');
-        // }
         pool.query('SELECT id, title, content, author, points, solves, start FROM challenges WHERE id = $1' + tmp, [challId], (error, dbRes) => {
             if (error) {
                 throw error;
@@ -125,11 +160,6 @@ const getChallengeById = (request, response) => {
     });
 };
 
-Date.prototype.fixZone = function () {
-    this.setHours(this.getHours() + 2);
-    return this;
-};
-
 const sendAnswer = (request, response) => {
     const { id, challId, answer } = request.body;
     if (answer.length >= 100) {
@@ -140,55 +170,24 @@ const sendAnswer = (request, response) => {
     }
     timeToSubmit(id).then((t) => {
         if (t != '0') {
-            response.status(400).send('Musisz odczekać jeszcze ' + t + ' min');
-        } else {
-            isSolved(id, challId).then((v) => {
-                if (v == 'true') {
-                    return response.status(200).send(false);
-                }
-                pool.query("SELECT id, title, content, author, points, answer, solves, start FROM challenges WHERE id=$1 AND start <= now() AT TIME ZONE 'CEST'", [challId], (error, dbRes) => {
-                    if (error) {
-                        throw error;
-                    }
-                    if (!dbRes || !dbRes.rows || !dbRes.rows.length || !dbRes.rows[0].id) {
-                        return response.status(400).send('Challenge does not exist');
-                    } else {
-                        const chall = dbRes.rows[0];
-                        if (new Date(Date.parse(process.env.COMPETITION_END)) >= new Date().fixZone()) {
-                            if (chall.answer === answer) {
-                                logSubmit(request, 'AC');
-                                pool.query('UPDATE users SET points=points+$1, solves=array_append(solves,$2), submitted_ac=now() WHERE id=$3 AND verified = true', [chall['points'], chall['id'], id], (error) => {
-                                    if (error) {
-                                        throw error;
-                                    }
-                                    pool.query('UPDATE challenges SET solves=solves+1 WHERE id=$1', [challId], (error) => {
-                                        if (error) {
-                                            throw error;
-                                        }
-                                        return response.status(200).send(true);
-                                    });
-                                });
-                            } else {
-                                logSubmit(request, 'WA');
-                                pool.query("UPDATE users SET points=points-1, submitted=now() AT TIME ZONE 'CEST' WHERE id=$1 AND verified = true", [id]);
-                                return response.status(418).send('Przed nastepną odpowiedzią musisz odczekać 10 min');
-                            }
-                        } else {
-                            if (chall.answer === answer) {
-                                pool.query('UPDATE users SET solves=array_append(solves,$1) WHERE id=$2 AND verified = true', [chall.id, id], (error) => {
-                                    if (error) {
-                                        throw error;
-                                    }
-                                    return response.status(200).send(true);
-                                });
-                            } else {
-                                return response.status(418).send('Błędna odpowiedź');
-                            }
-                        }
-                    }
-                });
-            });
+            return response.status(400).send('Musisz odczekać jeszcze ' + t + ' min');
         }
+        isSolved(id, challId).then((v) => {
+            if (v == 'true') {
+                return response.status(200).send(false);
+            }
+            pool.query("SELECT id, title, content, author, points, answer, solves, start FROM challenges WHERE id=$1 AND start <= now() AT TIME ZONE 'CEST'", [challId], (error, dbRes) => {
+                if (error) {
+                    throw error;
+                }
+                if (!dbRes || !dbRes.rows || !dbRes.rows.length || !dbRes.rows[0].id) {
+                    return response.status(400).send('Challenge does not exist');
+                }
+                const corr = compAnswers(dbRes.rows[0], answer, id);
+                logSubmit(request, corr.correct);
+                return response.status(200).send(corr);
+            });
+        });
     });
 };
 
