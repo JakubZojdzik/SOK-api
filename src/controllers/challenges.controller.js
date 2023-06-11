@@ -77,7 +77,7 @@ const getCurrentChallenges = (request, response) => {
         if (error) {
             throw error;
         }
-        response.status(200).json(results.rows);
+        response.status(200).send(results.rows);
     });
 };
 
@@ -95,7 +95,7 @@ const getInactiveChallenges = (request, response) => {
             if (error) {
                 throw error;
             }
-            return response.status(200).json(results.rows);
+            return response.status(200).send(results.rows);
         });
     });
 };
@@ -223,7 +223,7 @@ const removeChallenge = (request, response) => {
 };
 
 const competitionTimeRange = (request, response) => {
-    response.status(200).json({ start: process.env.COMPETITION_START, end: process.env.COMPETITION_END });
+    response.status(200).send({ start: process.env.COMPETITION_START, end: process.env.COMPETITION_END });
 };
 
 module.exports = {

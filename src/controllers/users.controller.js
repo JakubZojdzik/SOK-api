@@ -168,7 +168,7 @@ const login = (request, response) => {
                 }
                 if (cmpRes) {
                     const token = signToken({ id: dbRes.rows[0]['id'] }, '21600s');
-                    return response.status(200).json({ token: token, email: dbRes.rows[0]['email'], name: dbRes.rows[0]['name'] });
+                    return response.status(200).send({ token: token, email: dbRes.rows[0]['email'], name: dbRes.rows[0]['name'] });
                 } else {
                     return response.status(401).send('Nieprawidłowe dane!');
                 }

@@ -36,7 +36,7 @@ app.use('/users/verifyPass', longLimiter);
 app.use('/users/verify', longLimiter);
 
 app.get('/', (request, response) => {
-    response.json({ info: 'Node.js, Express, and Postgres API' });
+    response.send({ info: 'Node.js, Express, and Postgres API' });
 });
 app.use('/users', usersRouter);
 app.use('/challenges', challengesRouter);
