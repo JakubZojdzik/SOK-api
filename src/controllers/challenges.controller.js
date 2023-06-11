@@ -11,7 +11,7 @@ const isSolved = async (usrId, challId) => {
     } else {
         return dbRes.rows[0]['text'];
     }
-}
+};
 
 const isAdmin = async (usrId) => {
     dbRes = await pool.query('SELECT admin FROM users WHERE id=$1 AND verified = true', [usrId]);
@@ -20,7 +20,7 @@ const isAdmin = async (usrId) => {
     } else {
         return dbRes.rows[0]['admin'] === 2;
     }
-}
+};
 
 const timeToSubmit = async (usrId) => {
     dbRes = await pool.query(
@@ -45,7 +45,7 @@ const timeToSubmit = async (usrId) => {
         [usrId]
     );
     return dbRes.rows[0]['minutes'];
-}
+};
 
 const logSubmit = (request, res) => {
     const { id, challId, answer } = request.body;
@@ -63,7 +63,7 @@ const logSubmit = (request, res) => {
             return console.log(err);
         }
     });
-}
+};
 
 const getCurrentChallenges = (request, response) => {
     // const id = request.body.id;

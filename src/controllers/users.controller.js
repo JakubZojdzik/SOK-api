@@ -18,7 +18,7 @@ const transporter = nodemailer.createTransport({
 
 const signToken = (username, expTime) => {
     return jwt.sign(username, process.env.TOKEN_SECRET, { expiresIn: expTime });
-}
+};
 
 const sendMail = (destination, subject, text, html) => {
     console.log('wysylam maila');
@@ -32,15 +32,15 @@ const sendMail = (destination, subject, text, html) => {
     };
     transporter.sendMail(message);
     console.log(message);
-}
+};
 
 const sendTokenEmail = (token, dest) => {
     sendMail(dest, 'Weryfikacja rejestracji', 'Dziękuję za rejestrację! Aby aktywować nowe konto należy kliknąć w poniższy link: ' + process.env.CLIENT_URL + '/verification?token=' + token + '<br />', '<h1><b>Dziękuję za rejestrację! </b></h1><br /> Aby aktywować nowe konto należy kliknąć w poniższy link:<br /><a href="' + process.env.CLIENT_URL + '/verification?token=' + token + '">Weryfikuj</a><br />');
-}
+};
 
 const sendVerifyToken = (token, dest) => {
     sendMail(dest, 'Zmiana hasła', 'Aby zmienić hasło należy kliknąć w poniższy link: ' + process.env.CLIENT_URL + '/passChange?token=' + token + '<br />', '<p>Aby zmienić hasło należy kliknąć w poniższy link:<br /><a href="' + process.env.CLIENT_URL + '/passChange?token=' + token + '">Weryfikuj</a><br /></p>');
-}
+};
 
 const register = (request, response) => {
     const { email, name, password, passwordRep } = request.body;
