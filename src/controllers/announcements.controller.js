@@ -37,7 +37,7 @@ const getInactive = (request, response) => {
     });
 };
 
-const addAnnouncement = (request, response) => {
+const add = (request, response) => {
     const { id, title, content, author, added } = request.body;
     isAdmin(id).then((admin) => {
         if (!admin) {
@@ -52,7 +52,7 @@ const addAnnouncement = (request, response) => {
     });
 };
 
-const removeAnnouncement = (request, response) => {
+const remove = (request, response) => {
     const { id, annId } = request.body;
     isAdmin(id).then((admin) => {
         if (!admin) {
@@ -69,7 +69,7 @@ const removeAnnouncement = (request, response) => {
 
 module.exports = {
     getCurrent,
-    removeAnnouncement,
-    addAnnouncement,
+    remove,
+    add,
     getInactive
 };

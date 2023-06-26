@@ -4,20 +4,21 @@ const challengesController = require('../controllers/challenges.controller');
 const authenticateToken = require('../middlewares/auth');
 
 router.use('/solve', authenticateToken);
-router.use('/currentChallenges', authenticateToken);
-router.use('/inactiveChallenges', authenticateToken);
-router.use('/addChallenge', authenticateToken);
-router.use('/removeChallenge', authenticateToken);
+router.use('/current', authenticateToken);
+router.use('/inactive', authenticateToken);
+router.use('/add', authenticateToken);
+router.use('/remove', authenticateToken);
 router.use('/byId/:challId', authenticateToken);
 
-router.get('/inactiveChallenges', challengesController.getInactiveChallenges);
-router.get('/currentChallenges', challengesController.getCurrentChallenges);
+router.get('/inactive', challengesController.getInactive);
+router.get('/current', challengesController.getCurrent);
 router.get('/competitionTimeRange', challengesController.competitionTimeRange);
-router.get('/byId/:challId', challengesController.getChallengeById);
+router.get('/byId/:challId', challengesController.getById);
 
 router.post('/solve', challengesController.sendAnswer);
-router.post('/addChallenge', challengesController.addChallenge);
+router.post('/edit', challengesController.edit);
+router.post('/add', challengesController.add);
 
-router.delete('/removeChallenge', challengesController.removeChallenge);
+router.delete('/remove', challengesController.remove);
 
 module.exports = router;
