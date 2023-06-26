@@ -10,8 +10,8 @@ router.use('/inactive', authenticateToken);
 router.get('/', announcementsController.getCurrent);
 router.get('/inactive', announcementsController.getInactive);
 
-router.post('/add', announcementsController.addAnnouncement);
+router.post('/add', announcementsController.add);
 
-router.delete('/remove', announcementsController.removeAnnouncement);
+router.delete('/remove', announcementsController.remove);
 
 module.exports = router;
