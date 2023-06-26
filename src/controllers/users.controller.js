@@ -16,13 +16,11 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-function signToken(username, expTime) {
+const signToken = (username, expTime) => {
     return jwt.sign(username, process.env.TOKEN_SECRET, { expiresIn: expTime });
-}
+};
 
-function sendMail(destination, subject, text, html) {
-    console.log('wysylam maila');
-
+const sendMail = (destination, subject, text, html) => {
     let message = {
         from: process.env.SMTP_FROM,
         to: destination,
@@ -31,16 +29,15 @@ function sendMail(destination, subject, text, html) {
         html: html
     };
     transporter.sendMail(message);
-    console.log(message);
-}
+};
 
-function sendTokenEmail(token, dest) {
+const sendTokenEmail = (token, dest) => {
     sendMail(dest, 'Weryfikacja rejestracji', 'Dziękuję za rejestrację! Aby aktywować nowe konto należy kliknąć w poniższy link: ' + process.env.CLIENT_URL + '/verification?token=' + token + '<br />', '<h1><b>Dziękuję za rejestrację! </b></h1><br /> Aby aktywować nowe konto należy kliknąć w poniższy link:<br /><a href="' + process.env.CLIENT_URL + '/verification?token=' + token + '">Weryfikuj</a><br />');
-}
+};
 
-function sendVerifyToken(token, dest) {
+const sendVerifyToken = (token, dest) => {
     sendMail(dest, 'Zmiana hasła', 'Aby zmienić hasło należy kliknąć w poniższy link: ' + process.env.CLIENT_URL + '/passChange?token=' + token + '<br />', '<p>Aby zmienić hasło należy kliknąć w poniższy link:<br /><a href="' + process.env.CLIENT_URL + '/passChange?token=' + token + '">Weryfikuj</a><br /></p>');
-}
+};
 
 const register = (request, response) => {
     const { email, name, password, passwordRep } = request.body;
@@ -48,14 +45,12 @@ const register = (request, response) => {
     if (!email.endsWith('@alo.pwr.edu.pl') || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         return response.status(401).send('Nieprawidłowy adres email!');
     }
-
     if (name.length < 5 || name.length > 12) {
         return response.status(401).send('Błędna długość nazwy!');
     }
     if (!/^[a-zA-Z0-9._-]+$/.test(name)) {
         return response.status(401).send('Nazwa powinna zawierać tylko litery, liczby, kropki, myślniki i podkreślniki!');
     }
-
     if (!/^[a-zA-Z0-9!@#$%^&*()_+=[\]{}|;:'"<>,\\./?`~\-]{8,32}$/.test(password)) {
         return response.status(401).send('Nieprawidłowe hasło!');
     }
@@ -162,7 +157,7 @@ const login = (request, response) => {
             return response.status(401).send('Nieprawidłowe dane!');
         } else {
             baseHash = dbRes.rows[0]['password'];
-            bcrypt.compare(password, baseHash, function (err, cmpRes) {
+            bcrypt.compare(password, baseHash, (err, cmpRes) => {
                 if (err) {
                     console.log(err);
                 }
@@ -186,7 +181,6 @@ const isLogged = (request, response) => {
     }
 };
 
-// Returns array with id's of solved challenges
 const solves = (request, response) => {
     const id = request.body.id;
     if (!id) {
