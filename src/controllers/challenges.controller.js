@@ -191,6 +191,21 @@ const sendAnswer = (request, response) => {
     });
 };
 
+const correctAnswer = (request, response) => {
+    const { id, challId } = request.body;
+    isAdmin(id).then((admin) => {
+        if (!admin) {
+            return response.status(403).send('You have to be admin');
+        }
+        pool.query('GET answer FROM challenges WHERE id=$1', [challId], (error, dbRes) => {
+            if (!dbRes || !dbRes.rows || !dbRes.rows.length || !dbRes.rows[0].id || error) {
+                return response.status(400).send('Challenge does not exist');
+            }
+            return response.status(200).send(dbRes.rows[0]);
+        });
+    });
+};
+
 const add = (request, response) => {
     const { id, title, content, author, points, answer, start } = request.body;
     isAdmin(id).then((admin) => {
@@ -219,7 +234,7 @@ const edit = (request, response) => {
             response.status(201).send('Challenge updated');
         });
     });
-}
+};
 
 const remove = (request, response) => {
     const { id, challId } = request.body;
@@ -248,5 +263,6 @@ module.exports = {
     add,
     remove,
     competitionTimeRange,
-    edit
+    edit,
+    correctAnswer
 };
