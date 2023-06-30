@@ -138,8 +138,8 @@ const getInactive = (request, response) => {
 };
 
 const getById = (request, response) => {
-    const challId = request.params['challId'];
-    const id = request.body.id;
+    const { id } = request.body;
+    const { challId } = request.query;
     isAdmin(id).then((admin) => {
         let tmp = " AND start <= now() AT TIME ZONE 'CEST'";
         if (admin) {
@@ -192,16 +192,20 @@ const sendAnswer = (request, response) => {
 };
 
 const correctAnswer = (request, response) => {
-    const { id, challId } = request.body;
+    const { id } = request.body;
+    const { challId } = request.query;
     isAdmin(id).then((admin) => {
         if (!admin) {
             return response.status(403).send('You have to be admin');
         }
-        pool.query('GET answer FROM challenges WHERE id=$1', [challId], (error, dbRes) => {
-            if (!dbRes || !dbRes.rows || !dbRes.rows.length || !dbRes.rows[0].id || error) {
+        pool.query('SELECT answer FROM challenges WHERE id=$1', [challId], (error, dbRes) => {
+            if (error) {
+                throw error;
+            }
+            if (!dbRes || !dbRes.rows || !dbRes.rows.length) {
                 return response.status(400).send('Challenge does not exist');
             }
-            return response.status(200).send(dbRes.rows[0]);
+            return response.status(200).send(dbRes.rows[0].answer);
         });
     });
 };

@@ -9,13 +9,14 @@ router.use('/inactive', authenticateToken);
 router.use('/add', authenticateToken);
 router.use('/edit', authenticateToken);
 router.use('/remove', authenticateToken);
-router.use('/byId/:challId', authenticateToken);
+router.use('/correctAnswer', authenticateToken);
+router.use('/byId', authenticateToken);
 
 router.get('/inactive', challengesController.getInactive);
 router.get('/current', challengesController.getCurrent);
 router.get('/competitionTimeRange', challengesController.competitionTimeRange);
 router.get('/correctAnswer', challengesController.correctAnswer);
-router.get('/byId/:challId', challengesController.getById);
+router.get('/byId', challengesController.getById);
 
 router.post('/solve', challengesController.sendAnswer);
 router.post('/edit', challengesController.edit);
