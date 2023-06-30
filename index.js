@@ -1,6 +1,4 @@
 const express = require('express');
-const swaggerJSDoc = require('swagger-jsdoc');
-const swaggerUi = require('swagger-ui-express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const usersRouter = require('./src/routes/users.route');
@@ -9,36 +7,6 @@ const announcementsRouter = require('./src/routes/announcements.route');
 const rateLimit = require('express-rate-limit');
 const app = express();
 const port = 8080;
-
-const swaggerDefinition = {
-    openapi: '3.0.0',
-    info: {
-        title: 'MądrALO competition system',
-        version: '0.1.0',
-        description: 'This is api for MądrALO competition system',
-        license: {
-            name: 'Licensed Under MIT',
-            url: 'https://mit-license.org/'
-        },
-        contact: {
-            name: 'MądrALO',
-            email: 'jakub.zojdzik@gmail.com'
-        }
-    },
-    servers: [
-        {
-            url: 'https://madralo.pl'
-        }
-    ]
-};
-
-const options = {
-    swaggerDefinition,
-    apis: ['./src/routes/*.js']
-};
-
-const swaggerSpec = swaggerJSDoc(options);
-app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use(cors());
 app.use(

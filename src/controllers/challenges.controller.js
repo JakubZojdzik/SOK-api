@@ -103,7 +103,7 @@ const compAnswers = (chall, answer, usrId) => {
     }
 };
 
-const getCurrentChallenges = (request, response) => {
+const getCurrent = (request, response) => {
     const id = request.body.id;
     isAdmin(id).then((admin) => {
         if (new Date(Date.parse(process.env.COMPETITION_START)) >= new Date().fixZone() && !admin) {
@@ -118,7 +118,7 @@ const getCurrentChallenges = (request, response) => {
     });
 };
 
-const getInactiveChallenges = (request, response) => {
+const getInactive = (request, response) => {
     const id = request.body.id;
     if (!id) {
         return response.status(403).send('Not permited!');
@@ -137,9 +137,9 @@ const getInactiveChallenges = (request, response) => {
     });
 };
 
-const getChallengeById = (request, response) => {
-    const challId = request.params['challId'];
-    const id = request.body.id;
+const getById = (request, response) => {
+    const { id } = request.body;
+    const { challId } = request.query;
     isAdmin(id).then((admin) => {
         let tmp = " AND start <= now() AT TIME ZONE 'CEST'";
         if (admin) {
@@ -191,7 +191,26 @@ const sendAnswer = (request, response) => {
     });
 };
 
-const addChallenge = (request, response) => {
+const correctAnswer = (request, response) => {
+    const { id } = request.body;
+    const { challId } = request.query;
+    isAdmin(id).then((admin) => {
+        if (!admin) {
+            return response.status(403).send('You have to be admin');
+        }
+        pool.query('SELECT answer FROM challenges WHERE id=$1', [challId], (error, dbRes) => {
+            if (error) {
+                throw error;
+            }
+            if (!dbRes || !dbRes.rows || !dbRes.rows.length) {
+                return response.status(400).send('Challenge does not exist');
+            }
+            return response.status(200).send(dbRes.rows[0].answer);
+        });
+    });
+};
+
+const add = (request, response) => {
     const { id, title, content, author, points, answer, start } = request.body;
     isAdmin(id).then((admin) => {
         if (!admin) {
@@ -206,7 +225,22 @@ const addChallenge = (request, response) => {
     });
 };
 
-const removeChallenge = (request, response) => {
+const edit = (request, response) => {
+    const { id, title, content, author, points, answer, solves, start, challId } = request.body;
+    isAdmin(id).then((admin) => {
+        if (!admin) {
+            return response.status(403).send('You have to be admin');
+        }
+        pool.query('UPDATE challenges SET title=$1, content=$2, author=$3, points=$4, answer=$5, solves=$6, start=$7 WHERE id=$8', [title, content, author, points, answer, solves, start, challId], (error) => {
+            if (error) {
+                throw error;
+            }
+            response.status(201).send('Challenge updated');
+        });
+    });
+};
+
+const remove = (request, response) => {
     const { id, challId } = request.body;
     isAdmin(id).then((admin) => {
         if (!admin) {
@@ -227,10 +261,12 @@ const competitionTimeRange = (request, response) => {
 
 module.exports = {
     sendAnswer,
-    getChallengeById,
-    getInactiveChallenges,
-    getCurrentChallenges,
-    addChallenge,
-    removeChallenge,
-    competitionTimeRange
+    getById,
+    getInactive,
+    getCurrent,
+    add,
+    remove,
+    competitionTimeRange,
+    edit,
+    correctAnswer
 };
