@@ -227,7 +227,7 @@ const edit = (request, response) => {
         if (!admin) {
             return response.status(403).send('You have to be admin');
         }
-        pool.query('UPDATE challenges SET (title, content, author, points, answer, solves, start) VALUES ($1, $2, $3, $4, $5, $6, $7) WHERE id=$8', [title, content, author, points, answer, solves, start, challId], (error) => {
+        pool.query('UPDATE challenges SET title=$1, content=$2, author=$3, points=$4, answer=$5, solves=$6, start=$7 WHERE id=$8', [title, content, author, points, answer, solves, start, challId], (error) => {
             if (error) {
                 throw error;
             }

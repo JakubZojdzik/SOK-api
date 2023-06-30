@@ -7,6 +7,7 @@ router.use('/solve', authenticateToken);
 router.use('/current', authenticateToken);
 router.use('/inactive', authenticateToken);
 router.use('/add', authenticateToken);
+router.use('/edit', authenticateToken);
 router.use('/remove', authenticateToken);
 router.use('/byId/:challId', authenticateToken);
 
