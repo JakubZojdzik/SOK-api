@@ -1,6 +1,7 @@
 const pool = require('../services/db.service');
 const dotenv = require('dotenv');
 const fs = require('fs');
+const isAdmin = require('../utils/isAdmin');
 
 dotenv.config();
 
@@ -10,15 +11,6 @@ const isSolved = async (usrId, challId) => {
         return 'false';
     } else {
         return dbRes.rows[0]['text'];
-    }
-};
-
-const isAdmin = async (usrId) => {
-    dbRes = await pool.query('SELECT admin FROM users WHERE id=$1 AND verified = true', [usrId]);
-    if (!dbRes || !dbRes.rows || !dbRes.rows.length) {
-        return false;
-    } else {
-        return dbRes.rows[0]['admin'] === 2;
     }
 };
 
