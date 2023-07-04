@@ -6,11 +6,11 @@ dotenv.config();
 const getAll = (request, response) => {
     pool.query(
         `
-            SELECT users.name, challenges.title, challenges.answer submits.answer, submits, correct, submits.answer
+            SELECT users.name, challenges.title, challenges.answer, submits.answer, submits.correct, submits.answer
             FROM ((submits
-            INNER JOIN users ON submits.usrId = users.id)
-            INNER JOIN challenges ON submits.challId = challenges.id)
-            ORDER BY sent DESC
+            INNER JOIN users ON submits.usr_id = users.id)
+            INNER JOIN challenges ON submits.chall_id = challenges.id)
+            ORDER BY submits.sent DESC
         `, [], (error, dbRes) => {
         if (error) {
             throw error;

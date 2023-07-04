@@ -158,7 +158,7 @@ const sendAnswer = (request, response) => {
                     return response.status(400).send('Challenge does not exist');
                 }
                 const corr = compAnswers(dbRes.rows[0], answer, id);
-                logSubmit(id, challId, Date.now(), answer, corr.correct);
+                logSubmit(id, challId, answer, corr.correct);
                 return response.status(200).send(corr);
             });
         });
