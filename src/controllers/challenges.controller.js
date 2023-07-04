@@ -2,6 +2,7 @@ const pool = require('../services/db.service');
 const dotenv = require('dotenv');
 const fs = require('fs');
 const isAdmin = require('../utils/isAdmin');
+const logSubmit = require('../utils/logSubmit');
 
 dotenv.config();
 
@@ -37,25 +38,6 @@ const timeToSubmit = async (usrId) => {
         [usrId]
     );
     return dbRes.rows[0]['minutes'];
-};
-
-const logSubmit = (request, res) => {
-    const { id, challId, answer } = request.body;
-    let msg;
-    if (res) msg = 'AC: ';
-    else msg = 'WA: ';
-    msg += id + ', ';
-    msg += challId + ', ';
-    msg += answer + ', ';
-    msg += (request.headers['x-forwarded-for'] || request.socket.remoteAddress) + ', ';
-    let d = new Date();
-    msg += d.toString() + '\n';
-
-    fs.appendFile('submits.log', msg, (err) => {
-        if (err) {
-            return console.log(err);
-        }
-    });
 };
 
 Date.prototype.fixZone = function () {
@@ -176,7 +158,7 @@ const sendAnswer = (request, response) => {
                     return response.status(400).send('Challenge does not exist');
                 }
                 const corr = compAnswers(dbRes.rows[0], answer, id);
-                logSubmit(request, corr.correct);
+                logSubmit(id, challId, Date.now(), answer, corr.correct);
                 return response.status(200).send(corr);
             });
         });

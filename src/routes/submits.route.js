@@ -14,6 +14,6 @@ router.use('/', (req, res, next) => {
     })
 });
 
-router.get('/all', submitsController.getAll);
+router.get('/', submitsController.getAll);
 
 module.exports = router;
