@@ -6,7 +6,7 @@ dotenv.config();
 const getAll = (request, response) => {
     pool.query(
         `
-            SELECT users.name, challenges.title, challenges.answer, submits.answer, submits.correct, submits.answer
+            SELECT submits.id AS "id", users.name AS "name", challenges.title AS "title", challenges.answer AS "corr_ans", submits.answer AS "given_ans", submits.correct AS "correct", submits.sent AS "sent"
             FROM ((submits
             INNER JOIN users ON submits.usr_id = users.id)
             INNER JOIN challenges ON submits.chall_id = challenges.id)
