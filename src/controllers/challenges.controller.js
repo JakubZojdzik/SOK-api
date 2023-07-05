@@ -56,11 +56,15 @@ const compAnswers = (chall, answer, usrId) => {
                     if (error) {
                         throw error;
                     }
-                    return { correct: true, info: '' };
                 });
             });
+            return { correct: true, info: '' };
         } else {
-            pool.query("UPDATE users SET points=points-1, submitted=now() AT TIME ZONE 'CEST' WHERE id=$1 AND verified = true", [usrId]);
+            pool.query("UPDATE users SET points=points-1, submitted=now() AT TIME ZONE 'CEST' WHERE id=$1 AND verified = true", [usrId], (error) => {
+                if (error) {
+                    throw error;
+                }
+            });
             return { correct: false, info: 'Przed nastepną odpowiedzią musisz odczekać 10 min' };
         }
     } else {
@@ -69,8 +73,8 @@ const compAnswers = (chall, answer, usrId) => {
                 if (error) {
                     throw error;
                 }
-                return { correct: true, info: '' };
             });
+            return { correct: true, info: '' };
         } else {
             return { correct: false, info: 'Błędna odpowiedź' };
         }
