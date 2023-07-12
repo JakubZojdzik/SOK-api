@@ -14,7 +14,6 @@ router.use('/byId', authenticateToken);
 
 router.get('/inactive', challengesController.getInactive);
 router.get('/current', challengesController.getCurrent);
-router.get('/competitionTimeRange', challengesController.competitionTimeRange);
 router.get('/correctAnswer', challengesController.correctAnswer);
 router.get('/byId', challengesController.getById);
 

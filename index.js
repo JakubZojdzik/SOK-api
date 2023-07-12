@@ -5,6 +5,7 @@ const usersRouter = require('./src/routes/users.route');
 const challengesRouter = require('./src/routes/challenges.route');
 const announcementsRouter = require('./src/routes/announcements.route');
 const submitsRouter = require('./src/routes/submits.route');
+const competitionRouter = require('./src/routes/competition.route');
 const rateLimit = require('express-rate-limit');
 const app = express();
 const port = 8080;
@@ -43,6 +44,7 @@ app.use('/users', usersRouter);
 app.use('/challenges', challengesRouter);
 app.use('/announcements', announcementsRouter);
 app.use('/submits', submitsRouter);
+app.use('/competition', competitionRouter);
 
 app.listen(port, () => {
     console.log(`App running on port ${port}.`);

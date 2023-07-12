@@ -233,10 +233,6 @@ const remove = (request, response) => {
     });
 };
 
-const competitionTimeRange = (request, response) => {
-    response.status(200).send({ start: competitionConf.startTime, end: competitionConf.endTime });
-};
-
 module.exports = {
     sendAnswer,
     getById,
@@ -244,7 +240,6 @@ module.exports = {
     getCurrent,
     add,
     remove,
-    competitionTimeRange,
     edit,
     correctAnswer
 };
