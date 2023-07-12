@@ -1,10 +1,10 @@
 const pool = require('../services/db.service');
-const dotenv = require('dotenv');
 const fs = require('fs');
+const yaml = require('js-yaml');
 const isAdmin = require('../utils/isAdmin');
 const logSubmit = require('../utils/logSubmit');
 
-dotenv.config();
+const competitionConf = yaml.load(fs.readFileSync('competition.yaml', 'utf8'));
 
 const isSolved = async (usrId, challId) => {
     dbRes = await pool.query('SELECT ($1 = ANY ((SELECT solves FROM users WHERE id=$2 AND verified=true)::int[]))::text', [challId, usrId]);
@@ -46,7 +46,7 @@ Date.prototype.fixZone = function () {
 };
 
 const compAnswers = (chall, answer, usrId) => {
-    if (new Date(Date.parse(process.env.COMPETITION_END)) >= new Date().fixZone()) {
+    if (new Date(Date.parse(competitionConf.endTime)) >= new Date().fixZone()) {
         if (chall.answer === answer) {
             pool.query('UPDATE users SET points=points+$1, solves=array_append(solves,$2), submitted_ac=now() WHERE id=$3 AND verified = true', [chall.points, chall.id, usrId], (error) => {
                 if (error) {
@@ -84,7 +84,7 @@ const compAnswers = (chall, answer, usrId) => {
 const getCurrent = (request, response) => {
     const id = request.body.id;
     isAdmin(id).then((admin) => {
-        if (new Date(Date.parse(process.env.COMPETITION_START)) >= new Date().fixZone() && !admin) {
+        if (new Date(Date.parse(competitionConf.startTime)) >= new Date().fixZone() && !admin) {
             return response.status(200).send([]);
         }
         pool.query("SELECT id, title, content, author, points, solves, start FROM challenges WHERE start <= now() AT TIME ZONE 'CEST' ORDER BY start DESC, points DESC", (error, results) => {
@@ -122,7 +122,7 @@ const getById = (request, response) => {
         let tmp = " AND start <= now() AT TIME ZONE 'CEST'";
         if (admin) {
             tmp = '';
-        } else if (new Date(Date.parse(process.env.COMPETITION_START)) >= new Date().fixZone()) {
+        } else if (new Date(Date.parse(competitionConf.startTime)) >= new Date().fixZone()) {
             return response.status(400).send('Challenge does not exist');
         }
         pool.query('SELECT id, title, content, author, points, solves, start FROM challenges WHERE id = $1' + tmp, [challId], (error, dbRes) => {
@@ -234,7 +234,7 @@ const remove = (request, response) => {
 };
 
 const competitionTimeRange = (request, response) => {
-    response.status(200).send({ start: process.env.COMPETITION_START, end: process.env.COMPETITION_END });
+    response.status(200).send({ start: competitionConf.startTime, end: competitionConf.endTime });
 };
 
 module.exports = {

@@ -1,7 +1,4 @@
 const pool = require('../services/db.service');
-const dotenv = require('dotenv');
-
-dotenv.config();
 
 const getAll = (request, response) => {
     pool.query(
