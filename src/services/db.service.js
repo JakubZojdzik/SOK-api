@@ -87,4 +87,18 @@ pool.query(
     }
 );
 
+pool.query('SELECT * FROM users', (error, dbRes) => {
+    if (error) {
+        throw error;
+    }
+    if (!dbRes.rowCount) {
+        pool.query('INSERT INTO users (name, email, password, verified, admin) VALUES ($1, $2, $3, true, 2)', [process.env.ADMIN_NAME, process.env.ADMIN_EMAIL, process.env.ADMIN_PASS], (error) => {
+            if (error) {
+                throw error;
+            }
+        });
+    }
+});
+
+
 module.exports = pool;
