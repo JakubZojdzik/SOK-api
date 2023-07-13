@@ -102,5 +102,5 @@ module.exports = {
     remove,
     add,
     getInactive,
-    edit
+    edit,
 };

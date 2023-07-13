@@ -15,10 +15,10 @@ const getAll = (request, response) => {
                 throw error;
             }
             return response.status(200).send(dbRes.rows);
-        }
+        },
     );
 };
 
 module.exports = {
-    getAll
+    getAll,
 };

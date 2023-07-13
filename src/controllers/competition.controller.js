@@ -14,5 +14,5 @@ const timeRange = (request, response) => {
 module.exports = {
     title,
     rules,
-    timeRange
+    timeRange,
 };

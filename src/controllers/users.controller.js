@@ -12,7 +12,7 @@ const transporter = nodemailer.createTransport({
     secure: true,
     auth: {
         user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASSWORD
+        pass: process.env.SMTP_PASSWORD,
     },
 });
 
@@ -24,7 +24,7 @@ const sendMail = (destination, subject, text, html) => {
         to: destination,
         subject,
         text,
-        html
+        html,
     };
     transporter.sendMail(message);
 };
@@ -220,5 +220,5 @@ module.exports = {
     isAdmin,
     verifyRegistration,
     changePassword,
-    verifyPasswordChange
+    verifyPasswordChange,
 };

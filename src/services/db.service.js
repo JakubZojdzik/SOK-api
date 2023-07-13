@@ -10,7 +10,7 @@ const pool = new Pool({
     port: process.env.PG_PORT,
     user: process.env.PG_USER,
     password: process.env.PG_PASSWORD,
-    database: process.env.PG_DB
+    database: process.env.PG_DB,
 });
 
 pool.query(
@@ -27,7 +27,7 @@ pool.query(
         if (error) {
             throw error;
         }
-    }
+    },
 );
 
 pool.query(
@@ -47,7 +47,7 @@ pool.query(
         if (error) {
             throw error;
         }
-    }
+    },
 );
 
 pool.query(
@@ -65,7 +65,7 @@ pool.query(
         if (error) {
             throw error;
         }
-    }
+    },
 );
 
 pool.query(
@@ -87,7 +87,7 @@ pool.query(
         if (error) {
             throw error;
         }
-    }
+    },
 );
 
 pool.query('SELECT * FROM users', (error, dbRes) => {

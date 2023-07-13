@@ -34,7 +34,7 @@ const timeToSubmit = async (usrId) => {
             END AS minutes
         FROM diff
     `,
-        [usrId]
+        [usrId],
     );
     return dbRes.rows[0].minutes;
 };
@@ -236,5 +236,5 @@ module.exports = {
     add,
     remove,
     edit,
-    correctAnswer
+    correctAnswer,
 };

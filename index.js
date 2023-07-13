@@ -14,7 +14,7 @@ const port = 8080;
 app.use(cors());
 app.use(
     bodyParser.urlencoded({
-        extended: true
+        extended: true,
     }),
 );
 
@@ -22,14 +22,14 @@ const defLimiter = rateLimit({
     windowMs: 10 * 1000, // 10 seconds
     max: 30000, // 30 requests per 10 seconds
     standardHeaders: false, // Disable rate limit info in the `RateLimit-*` headers
-    legacyHeaders: true // Enable the `X-RateLimit-*` headers
+    legacyHeaders: true, // Enable the `X-RateLimit-*` headers
 });
 
 const longLimiter = rateLimit({
     windowMs: 60 * 1000, // 1 minute
     max: 100, // 1 requests per minute
     standardHeaders: false, // Disable rate limit info in the `RateLimit-*` headers
-    legacyHeaders: true // Enable the `X-RateLimit-*` headers
+    legacyHeaders: true, // Enable the `X-RateLimit-*` headers
 });
 
 app.use('/', defLimiter);
