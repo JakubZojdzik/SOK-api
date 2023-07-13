@@ -19,6 +19,7 @@ const transporter = nodemailer.createTransport({
 const signToken = (username, expTime) => jwt.sign(username, process.env.TOKEN_SECRET, { expiresIn: expTime });
 
 const sendMail = (destination, subject, text, html) => {
+    console.log('wysylam', html);
     const message = {
         from: process.env.SMTP_FROM,
         to: destination,

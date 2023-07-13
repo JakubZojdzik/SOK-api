@@ -175,23 +175,16 @@ const sendAnswer = async (request, response) => {
     if (v === 'true') {
         return response.status(200).send(false);
     }
-    return pool.query(
+    const dbRes = await pool.query(
         "SELECT id, title, content, author, points, answer, solves, start FROM challenges WHERE id=$1 AND start <= now() AT TIME ZONE 'CEST'",
         [challId],
-        (error, dbRes) => {
-            if (error) {
-                console.error(error);
-                return response.status(500).send('Internal Server Error');
-            }
-            if (!dbRes.rowCount) {
-                return response.status(400).send('Challenge does not exist');
-            }
-            return compAnswers(dbRes.rows[0], answer, id).then((corr) => {
-                logSubmit(id, challId, answer, corr.correct);
-                return response.status(200).send(corr);
-            });
-        },
     );
+    if (!dbRes.rowCount) {
+        return response.status(400).send('Challenge does not exist');
+    }
+    const corr = await compAnswers(dbRes.rows[0], answer, id);
+    logSubmit(id, challId, answer, corr.correct);
+    return response.status(200).send(corr);
 };
 
 const correctAnswer = async (request, response) => {
