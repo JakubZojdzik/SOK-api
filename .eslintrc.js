@@ -1,6 +1,6 @@
 module.exports = {
     extends: ['airbnb-base', 'prettier'],
-    plugins: ['prettier'],
+    plugins: ['prettier', 'promise', 'n', 'import'],
     rules: {
         indent: ['error', 4],
         'no-console': 0,
