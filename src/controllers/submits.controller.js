@@ -8,13 +8,16 @@ const getAll = (request, response) => {
             INNER JOIN users ON submits.usr_id = users.id)
             INNER JOIN challenges ON submits.chall_id = challenges.id)
             ORDER BY submits.sent DESC
-        `, [], (error, dbRes) => {
-        if (error) {
-            throw error;
+        `,
+        [],
+        (error, dbRes) => {
+            if (error) {
+                throw error;
+            }
+            return response.status(200).send(dbRes.rows);
         }
-        return response.status(200).send(dbRes.rows);
-    });
-}
+    );
+};
 
 module.exports = {
     getAll

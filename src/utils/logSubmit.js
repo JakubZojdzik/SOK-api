@@ -10,5 +10,3 @@ const logSubmit = async (usrId, challId, answer, correct) => {
 };
 
 module.exports = logSubmit;
-
-// 'INSERT INTO challenges (title, content, author, points, answer, start) VALUES ($1, $2, $3, $4, $5, $6)'

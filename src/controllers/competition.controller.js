@@ -5,11 +5,11 @@ const competitionConf = yaml.load(fs.readFileSync('competition.yaml', 'utf8'));
 
 const title = (request, response) => {
     return response.status(200).send(competitionConf.title);
-}
+};
 
 const rules = (request, response) => {
     return response.status(200).send(competitionConf.rules);
-}
+};
 
 const timeRange = (request, response) => {
     response.status(200).send({ start: competitionConf.startTime, end: competitionConf.endTime });

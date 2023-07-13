@@ -1,5 +1,5 @@
 module.exports = {
-    extends: ['prettier', 'plugin:vue/vue3-recommended'],
+    extends: ['prettier'],
     plugins: ['prettier', 'simple-import-sort'],
     rules: {
         'prettier/prettier': ['error']
@@ -7,6 +7,5 @@ module.exports = {
     parserOptions: {
         ecmaVersion: 'latest',
         sourceType: 'module'
-    },
-    parser: 'vue-eslint-parser'
+    }
 };

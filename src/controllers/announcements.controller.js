@@ -1,7 +1,6 @@
 const pool = require('../services/db.service');
 const isAdmin = require('../utils/isAdmin');
 
-
 const getCurrent = (request, response) => {
     pool.query("SELECT * FROM announcements WHERE added <= now() AT TIME ZONE 'CEST' ORDER BY added DESC", (error, results) => {
         if (error) {
