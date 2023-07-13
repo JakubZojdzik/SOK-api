@@ -1,9 +1,11 @@
 module.exports = {
-    extends: ['prettier', 'airbnb-base'],
-    plugins: ['prettier', 'simple-import-sort'],
+    extends: ['airbnb-base', 'prettier'],
+    plugins: ['prettier'],
     rules: {
-        'prettier/prettier': ['error'],
         indent: ['error', 4],
+        'no-console': 0,
+        'max-len': ['error', { code: 170 }],
+        'prettier/prettier': 'error',
     },
     parserOptions: {
         ecmaVersion: 'latest',

@@ -30,11 +30,22 @@ const sendMail = (destination, subject, text, html) => {
 };
 
 const sendTokenEmail = (token, dest) => {
-    sendMail(dest, 'Weryfikacja rejestracji', `Dziękuję za rejestrację! Aby aktywować nowe konto należy kliknąć w poniższy link: ${process.env.CLIENT_URL}/verification?token=${token}<br />`, `<h1><b>Dziękuję za rejestrację! </b></h1><br /> Aby aktywować nowe konto należy kliknąć w poniższy link:<br /><a href="${process.env.CLIENT_URL}/verification?token=${token}">Weryfikuj</a><br />`);
+    sendMail(
+        dest,
+        'Weryfikacja rejestracji',
+        `Dziękuję za rejestrację! Aby aktywować nowe konto należy kliknąć w poniższy link: ${process.env.CLIENT_URL}/verification?token=${token}<br />`,
+        `<h1><b>Dziękuję za rejestrację! </b></h1><br /> Aby aktywować nowe konto należy kliknąć w poniższy link:<br />
+        <a href="${process.env.CLIENT_URL}/verification?token=${token}">Weryfikuj</a><br />`,
+    );
 };
 
 const sendVerifyToken = (token, dest) => {
-    sendMail(dest, 'Zmiana hasła', `Aby zmienić hasło należy kliknąć w poniższy link: ${process.env.CLIENT_URL}/passChange?token=${token}<br />`, `<p>Aby zmienić hasło należy kliknąć w poniższy link:<br /><a href="${process.env.CLIENT_URL}/passChange?token=${token}">Weryfikuj</a><br /></p>`);
+    sendMail(
+        dest,
+        'Zmiana hasła',
+        `Aby zmienić hasło należy kliknąć w poniższy link: ${process.env.CLIENT_URL}/passChange?token=${token}<br />`,
+        `<p>Aby zmienić hasło należy kliknąć w poniższy link:<br /><a href="${process.env.CLIENT_URL}/passChange?token=${token}">Weryfikuj</a><br /></p>`,
+    );
 };
 
 const register = (request, response) => {
@@ -49,21 +60,21 @@ const register = (request, response) => {
     if (!/^[a-zA-Z0-9._-]+$/.test(name)) {
         return response.status(401).send('Nazwa powinna zawierać tylko litery, liczby, kropki, myślniki i podkreślniki!');
     }
-    if (!/^[a-zA-Z0-9!@#$%^&*()_+=[\]{}|;:'"<>,\\./?`~\-]{8,32}$/.test(password)) {
+    if (!/^[a-zA-Z0-9!@#$%^&*()_+=[\]{}|;:'"<>,\\./?`~-]{8,32}$/.test(password)) {
         return response.status(401).send('Nieprawidłowe hasło!');
     }
     if (password !== passwordRep) {
         return response.status(401).send('Hasła są różne!');
     }
 
-    pool.query('SELECT * FROM users WHERE verified = true AND (email = $1 OR name = $2)', [email, name], (error, dbRes) => {
+    return pool.query('SELECT * FROM users WHERE verified = true AND (email = $1 OR name = $2)', [email, name], (error, dbRes) => {
         if (error) {
             throw error;
         }
         if (dbRes.rows.length) {
             return response.status(401).send('Konto o danym mailu lub nazwie już istnieje!');
         }
-        bcrypt
+        return bcrypt
             .genSalt(10)
             .then((salt) => bcrypt.hash(password, salt))
             .then((hash) => {
@@ -80,21 +91,21 @@ const register = (request, response) => {
 const changePassword = (request, response) => {
     const { email, password, passwordRep } = request.body;
 
-    if (!/^[a-zA-Z0-9!@#$%^&*()_+=[\]{}|;:'"<>,\\./?`~\-]{8,32}$/.test(password)) {
+    if (!/^[a-zA-Z0-9!@#$%^&*()_+=[\]{}|;:'"<>,\\./?`~-]{8,32}$/.test(password)) {
         return response.status(401).send('Nieprawidłowe hasło!');
     }
     if (password !== passwordRep) {
         return response.status(401).send('Hasła są różne!');
     }
 
-    pool.query('SELECT * FROM users WHERE email = $1', [email], (error, dbRes) => {
+    return pool.query('SELECT * FROM users WHERE email = $1', [email], (error, dbRes) => {
         if (error) {
             throw error;
         }
         if (!dbRes.rows.length) {
             return response.status(401).send('Konto o danym mailu nie istnieje!');
         }
-        bcrypt
+        return bcrypt
             .genSalt(10)
             .then((salt) => bcrypt.hash(password, salt))
             .then((hash) => {
@@ -149,7 +160,7 @@ const login = (request, response) => {
             return response.status(401).send('Nieprawidłowe dane!');
         }
         baseHash = dbRes.rows[0].password;
-        bcrypt.compare(password, baseHash, (err, cmpRes) => {
+        return bcrypt.compare(password, baseHash, (err, cmpRes) => {
             if (err) {
                 console.log(err);
             }
@@ -175,7 +186,7 @@ const solves = (request, response) => {
     if (!id) {
         return response.status(403).send('Not permited!');
     }
-    pool.query('SELECT solves FROM users WHERE id = $1 AND verified = true', [id], (error, dbRes) => {
+    return pool.query('SELECT solves FROM users WHERE id = $1 AND verified = true', [id], (error, dbRes) => {
         if (error) {
             throw error;
         }
@@ -191,10 +202,11 @@ const ranking = (request, response) => {
         if (error) {
             throw error;
         }
-        for (let i = 0; i < dbRes.rows.length; i++) {
-            dbRes.rows[i].position = i + 1;
+        const dbRows = dbRes.rows;
+        for (let i = 0; i < dbRes.rows.length; i += 1) {
+            dbRows[i].position = i + 1;
         }
-        return response.status(200).send(dbRes.rows);
+        return response.status(200).send(dbRows);
     });
 };
 
@@ -203,7 +215,7 @@ const isAdmin = (request, response) => {
     if (!id) {
         return response.status(200).send(false);
     }
-    pool.query('SELECT admin FROM users WHERE id=$1 AND verified = true', [id]).then((dbRes) => {
+    return pool.query('SELECT admin FROM users WHERE id=$1 AND verified = true', [id]).then((dbRes) => {
         if (!dbRes || !dbRes.rows || !dbRes.rows.length) {
             return response.status(200).send(false);
         }

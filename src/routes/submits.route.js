@@ -11,7 +11,7 @@ router.use('/', (req, res, next) => {
         if (!admin) {
             return res.status(403).send('You have to be admin');
         }
-        next();
+        return next();
     });
 });
 
