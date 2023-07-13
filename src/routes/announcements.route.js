@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const announcementsController = require('../controllers/announcements.controller');
 const authenticateToken = require('../middlewares/auth');
+const errorHandler = require('../middlewares/errorHandler');
 
 router.use('/remove', authenticateToken);
 router.use('/add', authenticateToken);
@@ -10,13 +11,13 @@ router.use('/byId', authenticateToken);
 router.use('/inactive', authenticateToken);
 router.use('/edit', authenticateToken);
 
-router.get('/', announcementsController.getCurrent);
-router.get('/inactive', announcementsController.getInactive);
-router.get('/byId', announcementsController.getById);
+router.get('/', errorHandler(announcementsController.getCurrent));
+router.get('/inactive', errorHandler(announcementsController.getInactive));
+router.get('/byId', errorHandler(announcementsController.getById));
 
-router.post('/add', announcementsController.add);
-router.post('/edit', announcementsController.edit);
+router.post('/add', errorHandler(announcementsController.add));
+router.post('/edit', errorHandler(announcementsController.edit));
 
-router.delete('/remove', announcementsController.remove);
+router.delete('/remove', errorHandler(announcementsController.remove));
 
 module.exports = router;

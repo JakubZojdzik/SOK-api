@@ -48,129 +48,102 @@ const sendVerifyToken = (token, dest) => {
     );
 };
 
-const register = (request, response) => {
+const register = async (request, response) => {
     const { email, name, password, passwordRep } = request.body;
+    const validEmailFormat = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    const validEmailDomain = email.endsWith('@alo.pwr.edu.pl');
+    const validNameLength = name.length >= 5 && name.length <= 12;
+    const validNameFormat = /^[a-zA-Z0-9._-]+$/.test(name);
+    const validPasswordFormat = /^[a-zA-Z0-9!@#$%^&*()_+=[\]{}|;:'"<>,\\./?`~-]{8,32}$/.test(password);
+    const passwordsMatch = password === passwordRep;
 
-    if (!email.endsWith('@alo.pwr.edu.pl') || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (!validEmailFormat || !validEmailDomain) {
         return response.status(401).send('Nieprawidłowy adres email!');
     }
-    if (name.length < 5 || name.length > 12) {
+    if (!validNameLength) {
         return response.status(401).send('Błędna długość nazwy!');
     }
-    if (!/^[a-zA-Z0-9._-]+$/.test(name)) {
+    if (!validNameFormat) {
         return response.status(401).send('Nazwa powinna zawierać tylko litery, liczby, kropki, myślniki i podkreślniki!');
     }
-    if (!/^[a-zA-Z0-9!@#$%^&*()_+=[\]{}|;:'"<>,\\./?`~-]{8,32}$/.test(password)) {
+    if (!validPasswordFormat) {
         return response.status(401).send('Nieprawidłowe hasło!');
     }
-    if (password !== passwordRep) {
+    if (!passwordsMatch) {
         return response.status(401).send('Hasła są różne!');
     }
 
-    return pool.query('SELECT * FROM users WHERE verified = true AND (email = $1 OR name = $2)', [email, name], (error, dbRes) => {
-        if (error) {
-            throw error;
-        }
-        if (dbRes.rows.length) {
-            return response.status(401).send('Konto o danym mailu lub nazwie już istnieje!');
-        }
-        return bcrypt
-            .genSalt(10)
-            .then((salt) => bcrypt.hash(password, salt))
-            .then((hash) => {
-                pool.query('INSERT INTO users (name, email, password) VALUES ($1, $2, $3)', [name, email, hash], () => {
-                    const token = signToken({ email }, '900s');
-                    sendTokenEmail(token, email);
-                    response.status(201).send('User registered');
-                });
-            })
-            .catch((err) => console.error(err.message));
-    });
+    const dbRes = await pool.query('SELECT * FROM users WHERE verified = true AND (email = $1 OR name = $2)', [email, name]);
+
+    if (dbRes.rowCount) {
+        return response.status(401).send('Konto o danym mailu lub nazwie już istnieje!');
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hash = await bcrypt.hash(password, salt);
+    await pool.query('INSERT INTO users (name, email, password) VALUES ($1, $2, $3)', [name, email, hash]);
+
+    const token = signToken({ email }, '900s');
+    sendTokenEmail(token, email);
+    return response.status(201).send('User registered');
 };
 
-const changePassword = (request, response) => {
+const changePassword = async (request, response) => {
     const { email, password, passwordRep } = request.body;
 
-    if (!/^[a-zA-Z0-9!@#$%^&*()_+=[\]{}|;:'"<>,\\./?`~-]{8,32}$/.test(password)) {
+    const validPasswordFormat = /^[a-zA-Z0-9!@#$%^&*()_+=[\]{}|;:'"<>,\\./?`~-]{8,32}$/.test(password);
+    const passwordsMatch = password === passwordRep;
+    if (!validPasswordFormat) {
         return response.status(401).send('Nieprawidłowe hasło!');
     }
-    if (password !== passwordRep) {
+    if (!passwordsMatch) {
         return response.status(401).send('Hasła są różne!');
     }
-
-    return pool.query('SELECT * FROM users WHERE email = $1', [email], (error, dbRes) => {
-        if (error) {
-            throw error;
-        }
-        if (!dbRes.rows.length) {
-            return response.status(401).send('Konto o danym mailu nie istnieje!');
-        }
-        return bcrypt
-            .genSalt(10)
-            .then((salt) => bcrypt.hash(password, salt))
-            .then((hash) => {
-                const token = signToken({ email, hash }, '900s');
-                sendVerifyToken(token, email);
-                response.status(201).send('Mail sent!');
-            })
-            .catch((err) => console.error(err.message));
-    });
+    const dbRes = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    if (!dbRes.rows.length) {
+        return response.status(401).send('Konto o danym mailu nie istnieje!');
+    }
+    const salt = await bcrypt.genSalt(10);
+    const hash = await bcrypt.hash(password, salt);
+    const token = signToken({ email, hash }, '900s');
+    sendVerifyToken(token, email);
+    return response.status(201).send('Mail sent!');
 };
 
-const verifyRegistration = (request, response) => {
+const verifyRegistration = async (request, response) => {
     const { token } = request.body;
-    jwt.verify(token, process.env.TOKEN_SECRET, (err, tokenRes) => {
-        if (err || !tokenRes.email) {
-            response.status(401).send('Cant verify token');
-        } else {
-            pool.query('UPDATE users SET verified = true WHERE email=$1', [tokenRes.email], (error) => {
-                if (error) {
-                    throw error;
-                }
-                response.status(200).send('Account verified!');
-            });
-        }
-    });
+    const tokenRes = jwt.verify(token, process.env.TOKEN_SECRET);
+    if (!tokenRes.email) {
+        return response.status(401).send('Cannot verify token');
+    }
+
+    await pool.query('UPDATE users SET verified = true WHERE email=$1', [tokenRes.email]);
+    return response.status(200).send('Account verified!');
 };
 
-const verifyPasswordChange = (request, response) => {
+const verifyPasswordChange = async (request, response) => {
     const { token } = request.body;
-    jwt.verify(token, process.env.TOKEN_SECRET, (err, tokenRes) => {
-        if (err || !tokenRes.email || !tokenRes.hash) {
-            response.status(401).send('Cant verify token');
-        } else {
-            pool.query('UPDATE users SET password = $1 WHERE email=$2', [tokenRes.hash, tokenRes.email], (error) => {
-                if (error) {
-                    throw error;
-                }
-                response.status(200).send('Password change verified!');
-            });
-        }
-    });
+    const tokenRes = jwt.verify(token, process.env.TOKEN_SECRET);
+    if (!tokenRes.email || !tokenRes.hash) {
+        return response.status(401).send('Cannot verify token');
+    }
+    await pool.query('UPDATE users SET password = $1 WHERE email=$2', [tokenRes.hash, tokenRes.email]);
+    return response.status(200).send('Password change verified!');
 };
 
-const login = (request, response) => {
+const login = async (request, response) => {
     const { email, password } = request.body;
-    let baseHash = '';
-    pool.query('SELECT * FROM users WHERE email = $1 AND verified = true', [email], (error, dbRes) => {
-        if (error) {
-            throw error;
-        }
-        if (!dbRes || !dbRes.rows || !dbRes.rows.length) {
-            return response.status(401).send('Nieprawidłowe dane!');
-        }
-        baseHash = dbRes.rows[0].password;
-        return bcrypt.compare(password, baseHash, (err, cmpRes) => {
-            if (err) {
-                console.log(err);
-            }
-            if (cmpRes) {
-                const token = signToken({ id: dbRes.rows[0].id }, '21600s');
-                return response.status(200).send({ token, email: dbRes.rows[0].email, name: dbRes.rows[0].name });
-            }
-            return response.status(401).send('Nieprawidłowe dane!');
-        });
-    });
+    const dbRes = await pool.query('SELECT * FROM users WHERE email = $1 AND verified = true', [email]);
+    if (!dbRes.rowCount) {
+        return response.status(401).send('Nieprawidłowe dane!');
+    }
+    const baseHash = dbRes.rows[0].password;
+    const cmpRes = await bcrypt.compare(password, baseHash);
+    if (cmpRes) {
+        const token = signToken({ id: dbRes.rows[0].id }, '21600s');
+        return response.status(200).send({ token, email: dbRes.rows[0].email, name: dbRes.rows[0].name });
+    }
+    return response.status(401).send('Nieprawidłowe dane!');
 };
 
 const isLogged = (request, response) => {
@@ -181,46 +154,37 @@ const isLogged = (request, response) => {
     return response.status(200).send(false);
 };
 
-const solves = (request, response) => {
+const solves = async (request, response) => {
     const { id } = request.body;
     if (!id) {
         return response.status(403).send('Not permited!');
     }
-    return pool.query('SELECT solves FROM users WHERE id = $1 AND verified = true', [id], (error, dbRes) => {
-        if (error) {
-            throw error;
-        }
-        if (!dbRes || !dbRes.rows || !dbRes.rows.length) {
-            return response.status(400).send('User does not exist');
-        }
-        return response.status(200).send(dbRes.rows[0].solves);
-    });
+    const dbRes = await pool.query('SELECT solves FROM users WHERE id = $1 AND verified = true', [id]);
+    if (!dbRes.rowCount) {
+        return response.status(400).send('User does not exist');
+    }
+    return response.status(200).send(dbRes.rows[0].solves);
 };
 
-const ranking = (request, response) => {
-    pool.query('SELECT name, points FROM users WHERE admin = 0 AND verified = true ORDER BY points DESC, submitted_ac ASC', (error, dbRes) => {
-        if (error) {
-            throw error;
-        }
-        const dbRows = dbRes.rows;
-        for (let i = 0; i < dbRes.rows.length; i += 1) {
-            dbRows[i].position = i + 1;
-        }
-        return response.status(200).send(dbRows);
-    });
+const ranking = async (request, response) => {
+    const dbRes = await pool.query('SELECT name, points FROM users WHERE admin = 0 AND verified = true ORDER BY points DESC, submitted_ac ASC');
+    const dbRows = dbRes.rows;
+    for (let i = 0; i < dbRes.rows.length; i += 1) {
+        dbRows[i].position = i + 1;
+    }
+    return response.status(200).send(dbRows);
 };
 
-const isAdmin = (request, response) => {
+const isAdmin = async (request, response) => {
     const { id } = request.body;
     if (!id) {
         return response.status(200).send(false);
     }
-    return pool.query('SELECT admin FROM users WHERE id=$1 AND verified = true', [id]).then((dbRes) => {
-        if (!dbRes || !dbRes.rows || !dbRes.rows.length) {
-            return response.status(200).send(false);
-        }
-        return response.status(200).send(dbRes.rows[0].admin === 2);
-    });
+    const dbRes = await pool.query('SELECT admin FROM users WHERE id=$1 AND verified = true', [id]);
+    if (!dbRes.rowCount) {
+        return response.status(200).send(false);
+    }
+    return response.status(200).send(dbRes.rows[0].admin === 2);
 };
 
 module.exports = {

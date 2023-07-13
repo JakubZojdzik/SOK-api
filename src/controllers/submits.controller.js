@@ -13,7 +13,8 @@ const getAll = (request, response) => {
         [],
         (error, dbRes) => {
             if (error) {
-                throw error;
+                console.error(error);
+                return response.status(500).send('Internal Server Error');
             }
             return response.status(200).send(dbRes.rows);
         },

@@ -7,11 +7,16 @@ const logSubmit = require('../utils/logSubmit');
 const competitionConf = yaml.load(fs.readFileSync('competition.yaml', 'utf8'));
 
 const isSolved = async (usrId, challId) => {
-    const dbRes = await pool.query('SELECT ($1 = ANY ((SELECT solves FROM users WHERE id=$2 AND verified=true)::int[]))::text', [challId, usrId]);
-    if (!dbRes || !dbRes.rows || !dbRes.rows.length) {
-        return 'false';
+    try {
+        const dbRes = await pool.query('SELECT ($1 = ANY ((SELECT solves FROM users WHERE id=$2 AND verified=true)::int[]))::text', [challId, usrId]);
+        if (!dbRes.rowCount) {
+            return 'false';
+        }
+        return dbRes.rows[0].text;
+    } catch (error) {
+        console.error(error);
+        return error;
     }
-    return dbRes.rows[0].text;
 };
 
 const timeToSubmit = async (usrId) => {
@@ -45,110 +50,115 @@ Date.prototype.fixZone = function fn() {
     return this;
 };
 
-const compAnswers = (chall, answer, usrId) => {
-    if (new Date(Date.parse(competitionConf.endTime)) >= new Date().fixZone()) {
+const compAnswers = async (chall, answer, usrId) => {
+    try {
+        const endTime = new Date(Date.parse(competitionConf.endTime));
+        const currentTime = new Date().fixZone();
+
+        const admin = await isAdmin(usrId);
+        if (admin) {
+            if (chall.answer === answer) {
+                return { correct: true, info: '' };
+            }
+            return { correct: false, info: 'Błędna odpowiedź' };
+        }
+
+        // during competition
+        if (endTime >= currentTime) {
+            if (chall.answer === answer) {
+                await pool.query(
+                    'UPDATE users SET points=points+$1, solves=array_append(solves,$2), submitted_ac=now() WHERE id=$3 AND verified = true',
+                    [chall.points, chall.id, usrId],
+                );
+                await pool.query('UPDATE challenges SET solves=solves+1 WHERE id=$1', [chall.id]);
+                return { correct: true, info: '' };
+            }
+
+            await pool.query("UPDATE users SET points=points-1, submitted=now() AT TIME ZONE 'CEST' WHERE id=$1 AND verified = true", [usrId]);
+            return { correct: false, info: 'Przed nastepną odpowiedzią musisz odczekać 10 min' };
+        }
+
+        // after competition
         if (chall.answer === answer) {
-            pool.query(
-                'UPDATE users SET points=points+$1, solves=array_append(solves,$2), submitted_ac=now() WHERE id=$3 AND verified = true',
-                [chall.points, chall.id, usrId],
-                (error) => {
-                    if (error) {
-                        throw error;
-                    }
-                    pool.query('UPDATE challenges SET solves=solves+1 WHERE id=$1', [chall.id], (poolErr) => {
-                        if (poolErr) {
-                            throw poolErr;
-                        }
-                    });
-                },
-            );
+            await pool.query('UPDATE users SET solves=array_append(solves,$1) WHERE id=$2 AND verified = true', [chall.id, usrId]);
             return { correct: true, info: '' };
         }
-        pool.query("UPDATE users SET points=points-1, submitted=now() AT TIME ZONE 'CEST' WHERE id=$1 AND verified = true", [usrId], (error) => {
-            if (error) {
-                throw error;
-            }
-        });
-        return { correct: false, info: 'Przed nastepną odpowiedzią musisz odczekać 10 min' };
+
+        return { correct: false, info: 'Błędna odpowiedź' };
+    } catch (error) {
+        console.error(error);
+        throw error;
     }
-    if (chall.answer === answer) {
-        pool.query('UPDATE users SET solves=array_append(solves,$1) WHERE id=$2 AND verified = true', [chall.id, usrId], (error) => {
-            if (error) {
-                throw error;
-            }
-        });
-        return { correct: true, info: '' };
-    }
-    return { correct: false, info: 'Błędna odpowiedź' };
 };
 
-const getCurrent = (request, response) => {
+const getCurrent = async (request, response) => {
     const { id } = request.body;
-    isAdmin(id).then((admin) => {
-        if (new Date(Date.parse(competitionConf.startTime)) >= new Date().fixZone() && !admin) {
-            return response.status(200).send([]);
-        }
-        return pool.query(
-            "SELECT id, title, content, author, points, solves, start FROM challenges WHERE start <= now() AT TIME ZONE 'CEST' ORDER BY start DESC, points DESC",
-            (error, results) => {
-                if (error) {
-                    throw error;
-                }
-                return response.status(200).send(results.rows);
-            },
-        );
-    });
+    const admin = await isAdmin(id);
+    const startTime = new Date(Date.parse(competitionConf.startTime));
+    const currentTime = new Date().fixZone();
+
+    if (startTime >= currentTime && !admin) {
+        return response.status(200).send([]);
+    }
+    return pool.query(
+        "SELECT id, title, content, author, points, solves, start FROM challenges WHERE start <= now() AT TIME ZONE 'CEST' ORDER BY start DESC, points DESC",
+        (error, results) => {
+            if (error) {
+                console.error(error);
+                return response.status(500).send('Internal Server Error');
+            }
+            return response.status(200).send(results.rows);
+        },
+    );
 };
 
-const getInactive = (request, response) => {
+const getInactive = async (request, response) => {
     const { id } = request.body;
     if (!id) {
         return response.status(403).send('Not permited!');
     }
-
-    return isAdmin(id).then((admin) => {
-        if (!admin) {
-            return response.status(403).send('Not permited');
-        }
-        return pool.query(
-            "SELECT id, title, content, author, points, solves, start FROM challenges WHERE start > now() AT TIME ZONE 'CEST' ORDER BY start DESC, points DESC",
-            (error, results) => {
-                if (error) {
-                    throw error;
-                }
-                return response.status(200).send(results.rows);
-            },
-        );
-    });
+    const admin = await isAdmin(id);
+    if (!admin) {
+        return response.status(403).send('Not permited');
+    }
+    return pool.query(
+        "SELECT id, title, content, author, points, solves, start FROM challenges WHERE start > now() AT TIME ZONE 'CEST' ORDER BY start DESC, points DESC",
+        (error, results) => {
+            if (error) {
+                console.error(error);
+                return response.status(500).send('Internal Server Error');
+            }
+            return response.status(200).send(results.rows);
+        },
+    );
 };
 
-const getById = (request, response) => {
+const getById = async (request, response) => {
     const { id } = request.body;
     const { challId } = request.query;
-    isAdmin(id).then((admin) => {
-        let tmp = " AND start <= now() AT TIME ZONE 'CEST'";
-        if (admin) {
-            tmp = '';
-        } else if (new Date(Date.parse(competitionConf.startTime)) >= new Date().fixZone()) {
+    const startTime = new Date(Date.parse(competitionConf.startTime));
+    const currentTime = new Date().fixZone();
+
+    const admin = await isAdmin(id);
+    let tmp = " AND start <= now() AT TIME ZONE 'CEST'";
+    if (admin) {
+        tmp = '';
+    } else if (startTime >= currentTime) {
+        return response.status(400).send('Challenge does not exist');
+    }
+    return pool.query(`SELECT id, title, content, author, points, solves, start FROM challenges WHERE id = $1${tmp}`, [challId], (error, dbRes) => {
+        if (error) {
+            console.error(error);
+            return response.status(500).send('Internal Server Error');
+        }
+        if (!dbRes.rowCount) {
             return response.status(400).send('Challenge does not exist');
         }
-        return pool.query(
-            `SELECT id, title, content, author, points, solves, start FROM challenges WHERE id = $1${tmp}`,
-            [challId],
-            (error, dbRes) => {
-                if (error) {
-                    throw error;
-                }
-                if (!dbRes || !dbRes.rows || !dbRes.rows.length) {
-                    return response.status(400).send('Challenge does not exist');
-                }
-                return response.status(200).send(dbRes.rows[0]);
-            },
-        );
+        return response.status(200).send(dbRes.rows[0]);
     });
 };
 
-const sendAnswer = (request, response) => {
+const sendAnswer = async (request, response) => {
     const { id, challId, answer } = request.body;
     if (answer.length >= 100) {
         return response.status(400).send('Za długa odpowiedź!');
@@ -156,102 +166,106 @@ const sendAnswer = (request, response) => {
     if (answer.length === 0) {
         return response.status(400).send('Wpisz odpowiedź!');
     }
-    return timeToSubmit(id).then((t) => {
-        if (t !== '0') {
-            return response.status(400).send(`Musisz odczekać jeszcze ${t} min`);
-        }
-        return isSolved(id, challId).then((v) => {
-            if (v === 'true') {
-                return response.status(200).send(false);
-            }
-            return pool.query(
-                "SELECT id, title, content, author, points, answer, solves, start FROM challenges WHERE id=$1 AND start <= now() AT TIME ZONE 'CEST'",
-                [challId],
-                (error, dbRes) => {
-                    if (error) {
-                        throw error;
-                    }
-                    if (!dbRes || !dbRes.rows || !dbRes.rows.length || !dbRes.rows[0].id) {
-                        return response.status(400).send('Challenge does not exist');
-                    }
-                    const corr = compAnswers(dbRes.rows[0], answer, id);
-                    logSubmit(id, challId, answer, corr.correct);
-                    return response.status(200).send(corr);
-                },
-            );
-        });
-    });
-};
-
-const correctAnswer = (request, response) => {
-    const { id } = request.body;
-    const { challId } = request.query;
-    isAdmin(id).then((admin) => {
-        if (!admin) {
-            return response.status(403).send('You have to be admin');
-        }
-        return pool.query('SELECT answer FROM challenges WHERE id=$1', [challId], (error, dbRes) => {
+    const t = await timeToSubmit(id);
+    if (t !== '0') {
+        return response.status(400).send(`Musisz odczekać jeszcze ${t} min`);
+    }
+    const v = await isSolved(id, challId);
+    if (v !== 'true' && v !== 'false') throw v;
+    if (v === 'true') {
+        return response.status(200).send(false);
+    }
+    return pool.query(
+        "SELECT id, title, content, author, points, answer, solves, start FROM challenges WHERE id=$1 AND start <= now() AT TIME ZONE 'CEST'",
+        [challId],
+        (error, dbRes) => {
             if (error) {
-                throw error;
+                console.error(error);
+                return response.status(500).send('Internal Server Error');
             }
-            if (!dbRes || !dbRes.rows || !dbRes.rows.length) {
+            if (!dbRes.rowCount) {
                 return response.status(400).send('Challenge does not exist');
             }
-            return response.status(200).send(dbRes.rows[0].answer);
-        });
+            return compAnswers(dbRes.rows[0], answer, id).then((corr) => {
+                logSubmit(id, challId, answer, corr.correct);
+                return response.status(200).send(corr);
+            });
+        },
+    );
+};
+
+const correctAnswer = async (request, response) => {
+    const { id } = request.body;
+    const { challId } = request.query;
+    const admin = await isAdmin(id);
+    if (!admin) {
+        return response.status(403).send('You have to be admin');
+    }
+    return pool.query('SELECT answer FROM challenges WHERE id=$1', [challId], (error, dbRes) => {
+        if (error) {
+            console.error(error);
+            return response.status(500).send('Internal Server Error');
+        }
+        if (!dbRes.rowCount) {
+            return response.status(400).send('Challenge does not exist');
+        }
+        return response.status(200).send(dbRes.rows[0].answer);
     });
 };
 
-const add = (request, response) => {
+const add = async (request, response) => {
     const { id, title, content, author, points, answer, start } = request.body;
-    isAdmin(id).then((admin) => {
-        if (!admin) {
-            return response.status(403).send('You have to be admin');
-        }
-        return pool.query(
-            'INSERT INTO challenges (title, content, author, points, answer, start) VALUES ($1, $2, $3, $4, $5, $6)',
-            [title, content, author, points, answer, start],
-            (error) => {
-                if (error) {
-                    throw error;
-                }
-                response.status(201).send('Challenge added');
-            },
-        );
-    });
-};
 
-const edit = (request, response) => {
-    const { id, title, content, author, points, answer, solves, start, challId } = request.body;
-    isAdmin(id).then((admin) => {
-        if (!admin) {
-            return response.status(403).send('You have to be admin');
-        }
-        return pool.query(
-            'UPDATE challenges SET title=$1, content=$2, author=$3, points=$4, answer=$5, solves=$6, start=$7 WHERE id=$8',
-            [title, content, author, points, answer, solves, start, challId],
-            (error) => {
-                if (error) {
-                    throw error;
-                }
-                response.status(201).send('Challenge updated');
-            },
-        );
-    });
-};
-
-const remove = (request, response) => {
-    const { id, challId } = request.body;
-    isAdmin(id).then((admin) => {
-        if (!admin) {
-            return response.status(403).send('You have to be admin');
-        }
-        return pool.query('DELETE FROM challenges WHERE id=$1', [challId], (error) => {
+    const admin = await isAdmin(id);
+    if (!admin) {
+        return response.status(403).send('You have to be admin');
+    }
+    return pool.query(
+        'INSERT INTO challenges (title, content, author, points, answer, start) VALUES ($1, $2, $3, $4, $5, $6)',
+        [title, content, author, points, answer, start],
+        (error) => {
             if (error) {
-                throw error;
+                console.error(error);
+                return response.status(500).send('Internal Server Error');
             }
-            response.status(201).send('Challenge removed');
-        });
+            return response.status(201).send('Challenge added');
+        },
+    );
+};
+
+const edit = async (request, response) => {
+    const { id, title, content, author, points, answer, solves, start, challId } = request.body;
+
+    const admin = await isAdmin(id);
+    if (!admin) {
+        return response.status(403).send('You have to be admin');
+    }
+    return pool.query(
+        'UPDATE challenges SET title=$1, content=$2, author=$3, points=$4, answer=$5, solves=$6, start=$7 WHERE id=$8',
+        [title, content, author, points, answer, solves, start, challId],
+        (error) => {
+            if (error) {
+                console.error(error);
+                return response.status(500).send('Internal Server Error');
+            }
+            return response.status(201).send('Challenge updated');
+        },
+    );
+};
+
+const remove = async (request, response) => {
+    const { id, challId } = request.body;
+
+    const admin = await isAdmin(id);
+    if (!admin) {
+        return response.status(403).send('You have to be admin');
+    }
+    return pool.query('DELETE FROM challenges WHERE id=$1', [challId], (error) => {
+        if (error) {
+            console.error(error);
+            return response.status(500).send('Internal Server Error');
+        }
+        return response.status(201).send('Challenge removed');
     });
 };
 

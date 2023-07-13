@@ -4,6 +4,7 @@ const router = express.Router();
 const submitsController = require('../controllers/submits.controller');
 const authenticateToken = require('../middlewares/auth');
 const isAdmin = require('../utils/isAdmin');
+const errorHandler = require('../middlewares/errorHandler');
 
 router.use('/', authenticateToken);
 router.use('/', (req, res, next) => {
@@ -15,6 +16,6 @@ router.use('/', (req, res, next) => {
     });
 });
 
-router.get('/', submitsController.getAll);
+router.get('/', errorHandler(submitsController.getAll));
 
 module.exports = router;
