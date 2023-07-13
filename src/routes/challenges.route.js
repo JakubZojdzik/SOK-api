@@ -1,4 +1,5 @@
 const express = require('express');
+
 const router = express.Router();
 const challengesController = require('../controllers/challenges.controller');
 const authenticateToken = require('../middlewares/auth');

@@ -1,8 +1,10 @@
 const dotenv = require('dotenv');
 const bcrypt = require('bcryptjs');
+
 dotenv.config();
 
-const Pool = require('pg').Pool;
+const { Pool } = require('pg');
+
 const pool = new Pool({
     host: process.env.PG_HOST,
     port: process.env.PG_PORT,
@@ -95,9 +97,7 @@ pool.query('SELECT * FROM users', (error, dbRes) => {
     }
     bcrypt
         .genSalt(10)
-        .then((salt) => {
-            return bcrypt.hash(process.env.ADMIN_PASS, salt);
-        })
+        .then((salt) => bcrypt.hash(process.env.ADMIN_PASS, salt))
         .then((hash) => {
             pool.query('INSERT INTO users (name, email, password, verified, admin) VALUES ($1, $2, $3, true, 2)', [process.env.ADMIN_NAME, process.env.ADMIN_EMAIL, hash], (error) => {
                 if (error) {

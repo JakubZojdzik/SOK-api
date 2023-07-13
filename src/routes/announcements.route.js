@@ -1,4 +1,5 @@
 const express = require('express');
+
 const router = express.Router();
 const announcementsController = require('../controllers/announcements.controller');
 const authenticateToken = require('../middlewares/auth');

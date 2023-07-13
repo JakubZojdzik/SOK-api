@@ -1,8 +1,8 @@
-const pool = require('../services/db.service');
 const bcrypt = require('bcryptjs');
 const dotenv = require('dotenv');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
+const pool = require('../services/db.service');
 
 dotenv.config();
 
@@ -13,30 +13,28 @@ const transporter = nodemailer.createTransport({
     auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASSWORD
-    }
+    },
 });
 
-const signToken = (username, expTime) => {
-    return jwt.sign(username, process.env.TOKEN_SECRET, { expiresIn: expTime });
-};
+const signToken = (username, expTime) => jwt.sign(username, process.env.TOKEN_SECRET, { expiresIn: expTime });
 
 const sendMail = (destination, subject, text, html) => {
-    let message = {
+    const message = {
         from: process.env.SMTP_FROM,
         to: destination,
-        subject: subject,
-        text: text,
-        html: html
+        subject,
+        text,
+        html
     };
     transporter.sendMail(message);
 };
 
 const sendTokenEmail = (token, dest) => {
-    sendMail(dest, 'Weryfikacja rejestracji', 'Dziękuję za rejestrację! Aby aktywować nowe konto należy kliknąć w poniższy link: ' + process.env.CLIENT_URL + '/verification?token=' + token + '<br />', '<h1><b>Dziękuję za rejestrację! </b></h1><br /> Aby aktywować nowe konto należy kliknąć w poniższy link:<br /><a href="' + process.env.CLIENT_URL + '/verification?token=' + token + '">Weryfikuj</a><br />');
+    sendMail(dest, 'Weryfikacja rejestracji', `Dziękuję za rejestrację! Aby aktywować nowe konto należy kliknąć w poniższy link: ${process.env.CLIENT_URL}/verification?token=${token}<br />`, `<h1><b>Dziękuję za rejestrację! </b></h1><br /> Aby aktywować nowe konto należy kliknąć w poniższy link:<br /><a href="${process.env.CLIENT_URL}/verification?token=${token}">Weryfikuj</a><br />`);
 };
 
 const sendVerifyToken = (token, dest) => {
-    sendMail(dest, 'Zmiana hasła', 'Aby zmienić hasło należy kliknąć w poniższy link: ' + process.env.CLIENT_URL + '/passChange?token=' + token + '<br />', '<p>Aby zmienić hasło należy kliknąć w poniższy link:<br /><a href="' + process.env.CLIENT_URL + '/passChange?token=' + token + '">Weryfikuj</a><br /></p>');
+    sendMail(dest, 'Zmiana hasła', `Aby zmienić hasło należy kliknąć w poniższy link: ${process.env.CLIENT_URL}/passChange?token=${token}<br />`, `<p>Aby zmienić hasło należy kliknąć w poniższy link:<br /><a href="${process.env.CLIENT_URL}/passChange?token=${token}">Weryfikuj</a><br /></p>`);
 };
 
 const register = (request, response) => {
@@ -64,21 +62,18 @@ const register = (request, response) => {
         }
         if (dbRes.rows.length) {
             return response.status(401).send('Konto o danym mailu lub nazwie już istnieje!');
-        } else {
-            bcrypt
-                .genSalt(10)
-                .then((salt) => {
-                    return bcrypt.hash(password, salt);
-                })
-                .then((hash) => {
-                    pool.query('INSERT INTO users (name, email, password) VALUES ($1, $2, $3)', [name, email, hash], () => {
-                        const token = signToken({ email: email }, '900s');
-                        sendTokenEmail(token, email);
-                        response.status(201).send('User registered');
-                    });
-                })
-                .catch((err) => console.error(err.message));
         }
+        bcrypt
+            .genSalt(10)
+            .then((salt) => bcrypt.hash(password, salt))
+            .then((hash) => {
+                pool.query('INSERT INTO users (name, email, password) VALUES ($1, $2, $3)', [name, email, hash], () => {
+                    const token = signToken({ email }, '900s');
+                    sendTokenEmail(token, email);
+                    response.status(201).send('User registered');
+                });
+            })
+            .catch((err) => console.error(err.message));
     });
 };
 
@@ -98,29 +93,26 @@ const changePassword = (request, response) => {
         }
         if (!dbRes.rows.length) {
             return response.status(401).send('Konto o danym mailu nie istnieje!');
-        } else {
-            bcrypt
-                .genSalt(10)
-                .then((salt) => {
-                    return bcrypt.hash(password, salt);
-                })
-                .then((hash) => {
-                    const token = signToken({ email: email, hash: hash }, '900s');
-                    sendVerifyToken(token, email);
-                    response.status(201).send('Mail sent!');
-                })
-                .catch((err) => console.error(err.message));
         }
+        bcrypt
+            .genSalt(10)
+            .then((salt) => bcrypt.hash(password, salt))
+            .then((hash) => {
+                const token = signToken({ email, hash }, '900s');
+                sendVerifyToken(token, email);
+                response.status(201).send('Mail sent!');
+            })
+            .catch((err) => console.error(err.message));
     });
 };
 
 const verifyRegistration = (request, response) => {
     const { token } = request.body;
     jwt.verify(token, process.env.TOKEN_SECRET, (err, tokenRes) => {
-        if (err || !tokenRes['email']) {
+        if (err || !tokenRes.email) {
             response.status(401).send('Cant verify token');
         } else {
-            pool.query('UPDATE users SET verified = true WHERE email=$1', [tokenRes['email']], (error) => {
+            pool.query('UPDATE users SET verified = true WHERE email=$1', [tokenRes.email], (error) => {
                 if (error) {
                     throw error;
                 }
@@ -133,10 +125,10 @@ const verifyRegistration = (request, response) => {
 const verifyPasswordChange = (request, response) => {
     const { token } = request.body;
     jwt.verify(token, process.env.TOKEN_SECRET, (err, tokenRes) => {
-        if (err || !tokenRes['email'] || !tokenRes['hash']) {
+        if (err || !tokenRes.email || !tokenRes.hash) {
             response.status(401).send('Cant verify token');
         } else {
-            pool.query('UPDATE users SET password = $1 WHERE email=$2', [tokenRes['hash'], tokenRes['email']], (error) => {
+            pool.query('UPDATE users SET password = $1 WHERE email=$2', [tokenRes.hash, tokenRes.email], (error) => {
                 if (error) {
                     throw error;
                 }
@@ -155,20 +147,18 @@ const login = (request, response) => {
         }
         if (!dbRes || !dbRes.rows || !dbRes.rows.length) {
             return response.status(401).send('Nieprawidłowe dane!');
-        } else {
-            baseHash = dbRes.rows[0]['password'];
-            bcrypt.compare(password, baseHash, (err, cmpRes) => {
-                if (err) {
-                    console.log(err);
-                }
-                if (cmpRes) {
-                    const token = signToken({ id: dbRes.rows[0]['id'] }, '21600s');
-                    return response.status(200).send({ token: token, email: dbRes.rows[0]['email'], name: dbRes.rows[0]['name'] });
-                } else {
-                    return response.status(401).send('Nieprawidłowe dane!');
-                }
-            });
         }
+        baseHash = dbRes.rows[0].password;
+        bcrypt.compare(password, baseHash, (err, cmpRes) => {
+            if (err) {
+                console.log(err);
+            }
+            if (cmpRes) {
+                const token = signToken({ id: dbRes.rows[0].id }, '21600s');
+                return response.status(200).send({ token, email: dbRes.rows[0].email, name: dbRes.rows[0].name });
+            }
+            return response.status(401).send('Nieprawidłowe dane!');
+        });
     });
 };
 
@@ -176,13 +166,12 @@ const isLogged = (request, response) => {
     const { id } = request.body;
     if (id) {
         return response.status(200).send(id.toString());
-    } else {
-        return response.status(200).send(false);
     }
+    return response.status(200).send(false);
 };
 
 const solves = (request, response) => {
-    const id = request.body.id;
+    const { id } = request.body;
     if (!id) {
         return response.status(403).send('Not permited!');
     }
@@ -193,7 +182,7 @@ const solves = (request, response) => {
         if (!dbRes || !dbRes.rows || !dbRes.rows.length) {
             return response.status(400).send('User does not exist');
         }
-        return response.status(200).send(dbRes.rows[0]['solves']);
+        return response.status(200).send(dbRes.rows[0].solves);
     });
 };
 
@@ -210,16 +199,15 @@ const ranking = (request, response) => {
 };
 
 const isAdmin = (request, response) => {
-    const id = request.body.id;
+    const { id } = request.body;
     if (!id) {
         return response.status(200).send(false);
     }
     pool.query('SELECT admin FROM users WHERE id=$1 AND verified = true', [id]).then((dbRes) => {
         if (!dbRes || !dbRes.rows || !dbRes.rows.length) {
             return response.status(200).send(false);
-        } else {
-            return response.status(200).send(dbRes.rows[0]['admin'] === 2);
         }
+        return response.status(200).send(dbRes.rows[0].admin === 2);
     });
 };
 

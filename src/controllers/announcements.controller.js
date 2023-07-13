@@ -11,7 +11,7 @@ const getCurrent = (request, response) => {
 };
 
 const getInactive = (request, response) => {
-    const id = request.body.id;
+    const { id } = request.body;
     if (!id) {
         return response.status(403).send('Not permited!');
     }
@@ -39,15 +39,14 @@ const getById = (request, response) => {
         } else if (new Date(Date.parse(process.env.COMPETITION_START)) >= new Date().fixZone()) {
             return response.status(400).send('Challenge does not exist');
         }
-        pool.query('SELECT id, title, content, author, added FROM announcements WHERE id = $1' + tmp, [annId], (error, dbRes) => {
+        pool.query(`SELECT id, title, content, author, added FROM announcements WHERE id = $1${tmp}`, [annId], (error, dbRes) => {
             if (error) {
                 throw error;
             }
             if (!dbRes || !dbRes.rows || !dbRes.rows.length) {
                 return response.status(400).send('Announcement does not exist');
-            } else {
-                return response.status(200).send(dbRes.rows[0]);
             }
+            return response.status(200).send(dbRes.rows[0]);
         });
     });
 };

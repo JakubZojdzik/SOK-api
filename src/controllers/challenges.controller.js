@@ -1,6 +1,6 @@
-const pool = require('../services/db.service');
 const fs = require('fs');
 const yaml = require('js-yaml');
+const pool = require('../services/db.service');
 const isAdmin = require('../utils/isAdmin');
 const logSubmit = require('../utils/logSubmit');
 
@@ -10,9 +10,8 @@ const isSolved = async (usrId, challId) => {
     dbRes = await pool.query('SELECT ($1 = ANY ((SELECT solves FROM users WHERE id=$2 AND verified=true)::int[]))::text', [challId, usrId]);
     if (!dbRes || !dbRes.rows || !dbRes.rows.length) {
         return 'false';
-    } else {
-        return dbRes.rows[0]['text'];
     }
+    return dbRes.rows[0].text;
 };
 
 const timeToSubmit = async (usrId) => {
@@ -37,7 +36,7 @@ const timeToSubmit = async (usrId) => {
     `,
         [usrId]
     );
-    return dbRes.rows[0]['minutes'];
+    return dbRes.rows[0].minutes;
 };
 
 Date.prototype.fixZone = function () {
@@ -59,30 +58,27 @@ const compAnswers = (chall, answer, usrId) => {
                 });
             });
             return { correct: true, info: '' };
-        } else {
-            pool.query("UPDATE users SET points=points-1, submitted=now() AT TIME ZONE 'CEST' WHERE id=$1 AND verified = true", [usrId], (error) => {
-                if (error) {
-                    throw error;
-                }
-            });
-            return { correct: false, info: 'Przed nastepną odpowiedzią musisz odczekać 10 min' };
         }
-    } else {
-        if (chall.answer === answer) {
-            pool.query('UPDATE users SET solves=array_append(solves,$1) WHERE id=$2 AND verified = true', [chall.id, usrId], (error) => {
-                if (error) {
-                    throw error;
-                }
-            });
-            return { correct: true, info: '' };
-        } else {
-            return { correct: false, info: 'Błędna odpowiedź' };
-        }
+        pool.query("UPDATE users SET points=points-1, submitted=now() AT TIME ZONE 'CEST' WHERE id=$1 AND verified = true", [usrId], (error) => {
+            if (error) {
+                throw error;
+            }
+        });
+        return { correct: false, info: 'Przed nastepną odpowiedzią musisz odczekać 10 min' };
     }
+    if (chall.answer === answer) {
+        pool.query('UPDATE users SET solves=array_append(solves,$1) WHERE id=$2 AND verified = true', [chall.id, usrId], (error) => {
+            if (error) {
+                throw error;
+            }
+        });
+        return { correct: true, info: '' };
+    }
+    return { correct: false, info: 'Błędna odpowiedź' };
 };
 
 const getCurrent = (request, response) => {
-    const id = request.body.id;
+    const { id } = request.body;
     isAdmin(id).then((admin) => {
         if (new Date(Date.parse(competitionConf.startTime)) >= new Date().fixZone() && !admin) {
             return response.status(200).send([]);
@@ -97,7 +93,7 @@ const getCurrent = (request, response) => {
 };
 
 const getInactive = (request, response) => {
-    const id = request.body.id;
+    const { id } = request.body;
     if (!id) {
         return response.status(403).send('Not permited!');
     }
@@ -125,15 +121,14 @@ const getById = (request, response) => {
         } else if (new Date(Date.parse(competitionConf.startTime)) >= new Date().fixZone()) {
             return response.status(400).send('Challenge does not exist');
         }
-        pool.query('SELECT id, title, content, author, points, solves, start FROM challenges WHERE id = $1' + tmp, [challId], (error, dbRes) => {
+        pool.query(`SELECT id, title, content, author, points, solves, start FROM challenges WHERE id = $1${tmp}`, [challId], (error, dbRes) => {
             if (error) {
                 throw error;
             }
             if (!dbRes || !dbRes.rows || !dbRes.rows.length) {
                 return response.status(400).send('Challenge does not exist');
-            } else {
-                return response.status(200).send(dbRes.rows[0]);
             }
+            return response.status(200).send(dbRes.rows[0]);
         });
     });
 };
@@ -148,7 +143,7 @@ const sendAnswer = (request, response) => {
     }
     timeToSubmit(id).then((t) => {
         if (t != '0') {
-            return response.status(400).send('Musisz odczekać jeszcze ' + t + ' min');
+            return response.status(400).send(`Musisz odczekać jeszcze ${t} min`);
         }
         isSolved(id, challId).then((v) => {
             if (v == 'true') {

@@ -1,4 +1,5 @@
 const express = require('express');
+
 const router = express.Router();
 const submitsController = require('../controllers/submits.controller');
 const authenticateToken = require('../middlewares/auth');

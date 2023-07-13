@@ -1,12 +1,13 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const rateLimit = require('express-rate-limit');
 const usersRouter = require('./src/routes/users.route');
 const challengesRouter = require('./src/routes/challenges.route');
 const announcementsRouter = require('./src/routes/announcements.route');
 const submitsRouter = require('./src/routes/submits.route');
 const competitionRouter = require('./src/routes/competition.route');
-const rateLimit = require('express-rate-limit');
+
 const app = express();
 const port = 8080;
 
@@ -14,7 +15,7 @@ app.use(cors());
 app.use(
     bodyParser.urlencoded({
         extended: true
-    })
+    }),
 );
 
 const defLimiter = rateLimit({
