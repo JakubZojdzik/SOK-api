@@ -89,6 +89,7 @@ pool.query(
 );
 
 pool.query('SELECT * FROM users', (error, dbRes) => {
+    if (dbRes.rowCount) return;
     if (error) {
         throw error;
     }
