@@ -1,12 +1,12 @@
-# mądrALO API
+# SOK API
 
-## mądrALO
+## SOK
 
-**mądrALO** is system created for school maths competition. It allows to create challenges, solve them, collect points and show best users in ranking.
+**SOK** is system created for school maths competition. It allows to create challenges, solve them, collect points and show best users in ranking.
 
 ## API
 
-This repository contains API of **mądrALO** writen in express and javascript.
+This repository contains API of **SOK** writen in express and javascript.
 
 ## Environment variables
 
@@ -22,4 +22,4 @@ docker-compose up -d
 
 ## Client
 
-You can find my client for **mądrALO** [here](https://github.com/JakubZojdzik/madrALO-client)
+You can find my client for **SOK** [here](https://github.com/JakubZojdzik/SOK-client)
