@@ -1,5 +1,5 @@
 {
-    "name": "madralo-api",
+    "name": "sok-api",
     "version": "1.0.0",
     "description": "Competition system",
     "scripts": {
@@ -8,14 +8,14 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/JakubZojdzik/madrALO-api.git"
+        "url": "git+https://github.com/JakubZojdzik/SOK-api.git"
     },
     "author": "Jakub Żojdzik",
     "license": "MIT",
     "bugs": {
-        "url": "https://github.com/JakubZojdzik/madrALO-api/issues"
+        "url": "https://github.com/JakubZojdzik/SOK-api/issues"
     },
-    "homepage": "https://github.com/JakubZojdzik/madrALO-api#readme",
+    "homepage": "https://github.com/JakubZojdzik/SOK-api#readme",
     "dependencies": {
         "bcryptjs": "^2.4.3",
         "body-parser": "^1.20.2",
