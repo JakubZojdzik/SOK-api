@@ -36,7 +36,7 @@ const getById = async (request, response) => {
 
     return pool.query(
         `
-            SELECT submits.id AS "id", users.name AS "name", challenges.title AS "title", challenges.answer AS "corr_ans",
+            SELECT submits.id AS "id", users.name AS "name", challenges.title AS "title",
                    submits.answer AS "given_ans", submits.correct AS "correct", submits.sent AS "sent"
             FROM ((submits
             INNER JOIN users ON submits.usr_id = users.id)
