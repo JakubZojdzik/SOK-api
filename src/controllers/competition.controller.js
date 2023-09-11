@@ -26,7 +26,7 @@ const edit = async (request, response) => {
     competitionConf.startTime = start;
     competitionConf.endTime = end;
     fs.writeFileSync('competition.yaml', yaml.dump(competitionConf));
-    return response.status(201).send('Challenge updated');
+    return response.status(201).send('Competition updated');
 };
 
 const storage = multer.diskStorage({
@@ -47,11 +47,11 @@ const uploadIcon = async (request, response) => {
     if (!admin) {
         return response.status(403).send('You dont have permissions');
     }
-    return upload.single('image')(request, response, (err) => {
+    return upload.single('icon')(request, response, (err) => {
         if (err) {
-            return response.status(400).send('Upload failed.');
+            return response.status(400).send(err);
         }
-        return response.statu(200).send('File uploaded successfully.');
+        return response.status(200).send('File uploaded successfully.');
     });
 };
 
