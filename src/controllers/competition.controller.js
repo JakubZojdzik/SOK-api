@@ -4,7 +4,7 @@ const multer = require('multer');
 const path = require('path');
 const isAdmin = require('../utils/isAdmin');
 
-const competitionConf = yaml.load(fs.readFileSync('competition.yaml', 'utf8'));
+const competitionConf = yaml.load(fs.readFileSync(process.env.SOK_CONFIG, 'utf8'));
 
 const getTitle = (request, response) => response.status(200).send(competitionConf.title);
 
