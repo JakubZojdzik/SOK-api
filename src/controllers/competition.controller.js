@@ -25,7 +25,7 @@ const edit = async (request, response) => {
     competitionConf.rules = rules;
     competitionConf.startTime = start;
     competitionConf.endTime = end;
-    fs.writeFileSync('competition.yaml', yaml.dump(competitionConf));
+    fs.writeFileSync(process.env.SOK_CONFIG, yaml.dump(competitionConf));
     return response.status(201).send('Competition updated');
 };
 

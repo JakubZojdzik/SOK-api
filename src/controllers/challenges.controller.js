@@ -4,7 +4,7 @@ const pool = require('../services/db.service');
 const isAdmin = require('../utils/isAdmin');
 const logSubmit = require('../utils/logSubmit');
 
-const competitionConf = yaml.load(fs.readFileSync('competition.yaml', 'utf8'));
+const competitionConf = yaml.load(fs.readFileSync(process.env.SOK_CONFIG, 'utf8'));
 
 const isSolved = async (usrId, challId) => {
     try {
