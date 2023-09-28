@@ -62,6 +62,14 @@ Docker Compose will run the following containers:
 - **postgres** - PostgreSQL database server on port specified in `PG_PORT` environment variable.
 - **pgadmin** - pgAdmin web interface on port `5050`.
 
+## SOK Client
+
+You can find Client for this project in [this repository](https://github.com/JakubZojdzik/SOK-client)
+
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
+
+## Contributing
+
+If you find a bug or have an idea for an improvement, please create an issue or submit a pull request.
